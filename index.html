@@ -4,10 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Dinner Menu | Interactive Planner</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Markdown Parser for AI Responses -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Chosen Palette: Warm Neutrals with functional accents. 
+         Background: Warm White/Cream. 
+         Text: Dark Slate. 
+         Accents: Soft Sage (Low Energy), Warm Amber (Med Energy), Cozy Terracotta (Slow/Comfort). -->
     
     <style>
         body {
@@ -16,7 +25,7 @@
             color: #333;
         }
 
-        /* Chart Container Styling */
+        /* Chart Container Styling - Mandatory per requirements */
         .chart-container {
             position: relative;
             width: 100%;
@@ -32,7 +41,7 @@
             }
         }
 
-        /* Custom Scrollbar */
+        /* Custom Scrollbar for card lists */
         .custom-scroll::-webkit-scrollbar {
             width: 8px;
         }
@@ -42,6 +51,9 @@
         .custom-scroll::-webkit-scrollbar-thumb {
             background: #d1d5db;
             border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
         }
 
         /* Card Selection States */
@@ -64,6 +76,14 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
+    <!-- Application Structure Plan: 
+         1. Header: Simple branding and a "Randomize" action.
+         2. The Plate Builder (Top Section): Visual staging area. ADDED: Gemini-powered "Get Recipe" and "Suggest Pairing".
+         3. Analytics Dashboard (Middle Section): Energy/Time charts.
+         4. Content Browser (Bottom Section): Tabbed interface for Mains/Sides.
+    -->
+
+    <!-- Header -->
     <header class="bg-white shadow-sm border-b border-stone-200 sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -81,12 +101,14 @@
 
     <main class="container mx-auto px-4 py-6 flex-grow space-y-8">
 
+        <!-- Intro Text -->
         <section class="max-w-4xl mx-auto text-center">
             <p class="text-stone-600">
-                Welcome to your interactive <strong>Master Menu Bank</strong>. Select a <strong>Main</strong> and a <strong>Side</strong> below, or use the <span class="text-purple-600 font-bold">✨ AI Chef</span> features.
+                Welcome to your interactive <strong>Master Menu Bank</strong>. Select a <strong>Main</strong> and a <strong>Side</strong> below, or use the <span class="text-purple-600 font-bold">✨ AI Chef</span> features to generate recipes and pairings instantly.
             </p>
         </section>
 
+        <!-- SECTION 1: The Plate Builder (State Display) -->
         <section class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
             <div class="bg-stone-50 px-6 py-3 border-b border-stone-200 flex justify-between items-center">
                 <h2 class="font-bold text-stone-700">🍽️ Tonight's Selection</h2>
@@ -94,64 +116,78 @@
             </div>
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                 
+                <!-- Selected Main -->
                 <div id="main-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-8 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group">
                     <span class="text-4xl mb-3 opacity-30">🍗</span>
                     <h3 class="text-lg font-medium text-stone-400">Select a Main Dish</h3>
                     <p class="text-sm text-stone-400">Choose from the menu below</p>
                 </div>
 
+                <!-- Plus Sign -->
                 <div class="hidden md:flex justify-center text-stone-300 text-4xl font-light">+</div>
 
+                <!-- Selected Side -->
                 <div id="side-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-8 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative">
                     <span class="text-4xl mb-3 opacity-30">🥗</span>
                     <h3 class="text-lg font-medium text-stone-400">Select a Side</h3>
                     <p class="text-sm text-stone-400">Choose from the menu below</p>
                 </div>
             </div>
+            <!-- Summary Bar -->
             <div id="meal-summary" class="bg-orange-50 px-6 py-3 text-orange-800 text-sm font-medium flex justify-between hidden">
                 <span id="total-time-display">Total Est. Time: --</span>
                 <span id="energy-display">Energy Required: --</span>
             </div>
         </section>
 
+        <!-- SECTION 2: Analytics Dashboard -->
         <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
+            <!-- Chart 1: Energy Levels -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
                 <h3 class="font-bold text-stone-700 mb-4 text-center">Menu Energy Levels</h3>
                 <div class="chart-container">
                     <canvas id="energyChart"></canvas>
                 </div>
+                <p class="text-xs text-center text-stone-400 mt-2">Distribution of Low, Medium, and Slow/Comfort meals</p>
             </div>
 
+            <!-- Chart 2: Time Estimations -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
                 <h3 class="font-bold text-stone-700 mb-4 text-center">Cook Time Estimates</h3>
                 <div class="chart-container">
                     <canvas id="timeChart"></canvas>
                 </div>
+                <p class="text-xs text-center text-stone-400 mt-2">Comparison of active cooking/simmer times</p>
             </div>
 
         </section>
 
+        <!-- SECTION 3: The Menu Browser -->
         <section class="bg-white rounded-2xl shadow-sm border border-stone-200 min-h-[600px] flex flex-col">
             
+            <!-- Tabs -->
             <div class="flex flex-wrap border-b border-stone-200">
                 <button onclick="switchTab('mains')" id="tab-mains" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors active-tab">
-                    🍗 Mains
+                    🍗 Mains (The Heavy Lifting)
                 </button>
                 <button onclick="switchTab('sides')" id="tab-sides" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">
-                    🥗 Sides
+                    🥗 Sides (The Easy Wins)
                 </button>
                 <button onclick="switchTab('ideas')" id="tab-ideas" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">
                     💡 New Ideas
                 </button>
                 <button onclick="switchTab('emergency')" id="tab-emergency" class="px-6 py-4 font-medium text-red-600 hover:bg-red-50 border-b-2 border-transparent transition-colors">
-                    🧊 Emergency
+                    🧊 Emergency Valve
                 </button>
             </div>
 
+            <!-- Tab Content Area -->
             <div class="p-6 flex-grow bg-stone-50/50">
                 
+                <!-- MAINS CONTENT -->
                 <div id="content-mains" class="tab-content block">
+                    <!-- Filters -->
                     <div class="flex flex-wrap gap-3 mb-6">
                         <span class="text-sm font-medium text-stone-500 self-center mr-2">Filter:</span>
                         <button onclick="filterMains('all')" class="filter-btn bg-stone-800 text-white px-3 py-1 rounded-full text-xs transition">All</button>
@@ -161,31 +197,40 @@
                         <button onclick="filterMains('Pizza')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-red-50 px-3 py-1 rounded-full text-xs transition">🍕 Tradition</button>
                     </div>
 
+                    <!-- Grid -->
                     <div id="mains-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        </div>
+                        <!-- JS will populate this -->
+                    </div>
                 </div>
 
+                <!-- SIDES CONTENT -->
                 <div id="content-sides" class="tab-content hidden">
                     <p class="mb-4 text-sm text-stone-500">Pair your main dish with one of these reliable sides.</p>
                     <div id="sides-grid" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                        </div>
+                        <!-- JS will populate this -->
+                    </div>
                 </div>
 
+                <!-- IDEAS CONTENT -->
                 <div id="content-ideas" class="tab-content hidden">
                     <div class="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-6">
                         <h3 class="font-bold text-blue-800 mb-2">💡 Inspiration Station</h3>
-                        <p class="text-sm text-blue-700">Recipes to try!</p>
+                        <p class="text-sm text-blue-700">These are recipes in the "To Try" queue. If you cook one this week and love it, promote it to a Main!</p>
                     </div>
                     <div id="ideas-list" class="space-y-3">
-                        </div>
+                        <!-- JS will populate this -->
+                    </div>
                 </div>
 
+                <!-- EMERGENCY CONTENT -->
                 <div id="content-emergency" class="tab-content hidden">
                     <div class="bg-red-50 border border-red-100 rounded-xl p-8 text-center">
                         <div class="text-5xl mb-4">🧊</div>
-                        <h3 class="text-2xl font-bold text-red-800 mb-2">Emergency Valve</h3>
+                        <h3 class="text-2xl font-bold text-red-800 mb-2">Break Glass in Case of Emergency</h3>
+                        <p class="text-red-700 mb-6">Zero energy required. Ready to heat.</p>
                         <div id="emergency-list" class="max-w-md mx-auto space-y-4">
-                            </div>
+                            <!-- JS will populate this -->
+                        </div>
                     </div>
                 </div>
 
@@ -194,6 +239,7 @@
 
     </main>
 
+    <!-- RECIPE MODAL -->
     <div id="recipe-modal" class="fixed inset-0 bg-black/50 hidden z-[60] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
             <div class="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50 rounded-t-2xl">
@@ -201,17 +247,14 @@
                 <button onclick="closeModal()" class="text-stone-400 hover:text-stone-600 text-2xl">&times;</button>
             </div>
             <div id="modal-content" class="p-8 overflow-y-auto custom-scroll prose prose-stone max-w-none">
-                </div>
+                <!-- AI Content will load here -->
+            </div>
         </div>
     </div>
 
+    <!-- JavaScript Logic -->
     <script>
-        // ---------------------------------------------------------
-        // 🚨 PASTE YOUR GEMINI API KEY BELOW (INSIDE THE QUOTES) 🚨
-        // ---------------------------------------------------------
-        const apiKey = ""; 
-        // Example: const apiKey = "AIzaSyD_this_is_a_fake_key_12345";
-        // ---------------------------------------------------------
+        const apiKey = "AIzaSyBn0gf31H6MrJL_x7nG1I1EBcIwVFvhrPQ"; 
 
         // --- DATA STORAGE ---
         const mainsData = [
@@ -250,7 +293,11 @@
         ];
 
         // --- STATE MANAGEMENT ---
-        let state = { selectedMain: null, selectedSide: null, filter: 'all' };
+        let state = {
+            selectedMain: null,
+            selectedSide: null,
+            filter: 'all'
+        };
 
         // --- DOM ELEMENTS ---
         const mainsGrid = document.getElementById('mains-grid');
@@ -279,6 +326,7 @@
         });
 
         // --- RENDERING FUNCTIONS ---
+
         function renderMains() {
             mainsGrid.innerHTML = '';
             const filtered = state.filter === 'all' 
@@ -290,6 +338,7 @@
                 card.className = `bg-white border border-stone-200 rounded-xl p-4 cursor-pointer hover:shadow-md transition group ${state.selectedMain?.id === dish.id ? 'selected-card' : ''}`;
                 card.onclick = () => selectMain(dish);
                 
+                // Card Color Strip based on energy
                 let colorClass = 'bg-stone-200';
                 if(dish.category === 'Low') colorClass = 'bg-green-400';
                 if(dish.category === 'Med') colorClass = 'bg-amber-400';
@@ -352,14 +401,17 @@
         }
 
         // --- INTERACTION HANDLERS ---
+
         function selectMain(dish) {
             state.selectedMain = dish;
             renderMains(); 
+            
             mainSlot.className = "bg-white border-2 border-orange-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
             mainSlot.innerHTML = `
                 <span class="text-4xl mb-2">${dish.icon}</span>
                 <h3 class="text-xl font-bold text-stone-800 leading-tight mb-2">${dish.name}</h3>
                 <p class="text-sm text-stone-500 mb-4">Est: ${dish.timeDisplay}</p>
+                
                 <button onclick="generateRecipe()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:shadow-lg transition flex items-center gap-2 transform hover:scale-105">
                     ✨ Generate Recipe
                 </button>
@@ -370,10 +422,12 @@
         function selectSide(side) {
             state.selectedSide = side;
             renderSides(); 
+
             sideSlot.className = "bg-white border-2 border-green-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
             sideSlot.innerHTML = `
                 <span class="text-4xl mb-2">🥗</span>
                 <h3 class="text-xl font-bold text-stone-800 leading-tight mb-4">${side}</h3>
+                
                 <button onclick="suggestSide()" class="text-xs text-purple-600 font-medium hover:underline flex items-center gap-1">
                     ✨ Ask AI for a better pairing
                 </button>
@@ -406,20 +460,25 @@
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById(`content-${tabId}`).classList.remove('hidden');
+
             document.querySelectorAll('button[id^="tab-"]').forEach(btn => {
                 btn.classList.remove('border-stone-800', 'text-stone-800', 'bg-stone-50');
                 btn.classList.add('border-transparent');
             });
+
             const activeBtn = document.getElementById(`tab-${tabId}`);
             activeBtn.classList.remove('border-transparent');
             activeBtn.classList.add('border-stone-800', 'text-stone-800', 'bg-stone-50');
         }
 
-        function highlightTab(tabId) { switchTab(tabId); }
+        function highlightTab(tabId) {
+             switchTab(tabId);
+        }
 
         function randomizeMeal() {
             const randomMain = mainsData[Math.floor(Math.random() * mainsData.length)];
             const randomSide = sidesData[Math.floor(Math.random() * sidesData.length)];
+            
             selectMain(randomMain);
             selectSide(randomSide);
             switchTab('mains');
@@ -427,14 +486,41 @@
         }
 
         // --- GEMINI API INTEGRATION ---
+        
         async function generateRecipe() {
             if (!state.selectedMain) return;
-            openModal("✨ Generating Recipe...");
-            modalContent.innerHTML = `<div class="flex flex-col items-center justify-center py-12"><div class="text-4xl mb-4 sparkle-spin">✨</div><p class="text-stone-500 animate-pulse">Consulting the digital chef...</p></div>`;
 
-            const prompt = `You are a helpful home cooking assistant. Generate a concise recipe card for: "${state.selectedMain.name}". Context/Notes: "${state.selectedMain.notes}". The user has marked this as a "${state.selectedMain.energy}" energy meal. If the energy level is 'Low', prioritize shortcuts and minimal prep. If it's 'Slow/Comfort', emphasize the cozy process. Format as Markdown.`;
+            openModal("✨ Generating Recipe...");
+            modalContent.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12">
+                    <div class="text-4xl mb-4 sparkle-spin">✨</div>
+                    <p class="text-stone-500 animate-pulse">Consulting the digital chef...</p>
+                </div>
+            `;
+
+            const prompt = `
+                You are a helpful home cooking assistant. 
+                Generate a concise recipe card for: "${state.selectedMain.name}".
+                
+                Context/Notes: "${state.selectedMain.notes}".
+                The user has marked this as a "${state.selectedMain.energy}" energy meal.
+                
+                If the energy level is 'Low', prioritize shortcuts and minimal prep.
+                If it's 'Slow/Comfort', emphasize the cozy process.
+
+                Format as Markdown:
+                ## [Dish Name]
+                **Est. Time:** [Time]
+                
+                ### Ingredients
+                * List...
+
+                ### Instructions
+                1. Step 1...
+            `;
 
             const result = await callGemini(prompt);
+            
             if (result) {
                 modalTitle.textContent = `Recipe: ${state.selectedMain.name}`;
                 modalContent.innerHTML = marked.parse(result);
@@ -445,19 +531,41 @@
 
         async function suggestSide() {
             if (!state.selectedMain) return;
+            
+            // Show loading state in side slot
             const originalContent = sideSlot.innerHTML;
-            sideSlot.innerHTML = `<div class="flex flex-col items-center"><div class="text-2xl mb-2 sparkle-spin">✨</div><p class="text-xs text-stone-500">Thinking...</p></div>`;
+            sideSlot.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <div class="text-2xl mb-2 sparkle-spin">✨</div>
+                    <p class="text-xs text-stone-500">Thinking...</p>
+                </div>
+            `;
 
-            const prompt = `Suggest exactly ONE perfect side dish to pair with "${state.selectedMain.name}". Consider flavors, texture balance, and color. Return ONLY the name of the side dish on the first line, and a very short (1 sentence) explanation on the second line. Do not use markdown.`;
+            const prompt = `
+                Suggest exactly ONE perfect side dish to pair with "${state.selectedMain.name}".
+                Consider flavors, texture balance, and color.
+                
+                Return ONLY the name of the side dish on the first line, 
+                and a very short (1 sentence) explanation on the second line.
+                Do not use markdown.
+            `;
 
             const result = await callGemini(prompt);
+
             if (result) {
                 const lines = result.split('\n').filter(line => line.trim() !== '');
                 const sideName = lines[0] || "Garlic Bread";
                 const reason = lines[1] || "It goes well with everything.";
-                state.selectedSide = sideName; 
+                
+                state.selectedSide = sideName; // update state
+                
                 sideSlot.className = "bg-white border-2 border-purple-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
-                sideSlot.innerHTML = `<span class="text-4xl mb-2">✨</span><h3 class="text-xl font-bold text-purple-700 leading-tight mb-2">${sideName}</h3><p class="text-xs text-stone-500 italic mb-4">"${reason}"</p><button onclick="renderSides()" class="text-xs text-stone-400 underline">Reset</button>`;
+                sideSlot.innerHTML = `
+                    <span class="text-4xl mb-2">✨</span>
+                    <h3 class="text-xl font-bold text-purple-700 leading-tight mb-2">${sideName}</h3>
+                    <p class="text-xs text-stone-500 italic mb-4">"${reason}"</p>
+                    <button onclick="renderSides()" class="text-xs text-stone-400 underline">Reset</button>
+                `;
             } else {
                 sideSlot.innerHTML = originalContent;
                 alert("AI request failed. Please check connection.");
@@ -469,8 +577,11 @@
                 alert("API Key is missing in the code. Please edit the 'apiKey' variable.");
                 return null;
             }
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
-            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }]
+            };
 
             try {
                 const response = await fetch(url, {
@@ -478,7 +589,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
                 const data = await response.json();
                 return data.candidates?.[0]?.content?.parts?.[0]?.text;
             } catch (e) {
@@ -487,31 +600,66 @@
             }
         }
 
-        function openModal(title) { modalTitle.textContent = title; modal.classList.remove('hidden'); }
-        function closeModal() { modal.classList.add('hidden'); }
-        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        function openModal(title) {
+            modalTitle.textContent = title;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+
+        // Close modal on outside click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
 
         // --- CHARTS ---
         function initCharts() {
             const energyCounts = { Low: 0, Med: 0, Slow: 0, Pizza: 0 };
-            mainsData.forEach(m => { if(energyCounts[m.category] !== undefined) energyCounts[m.category]++; });
-
-            new Chart(document.getElementById('energyChart').getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Low', 'Med', 'Slow', 'Pizza'],
-                    datasets: [{ data: [energyCounts.Low, energyCounts.Med, energyCounts.Slow, energyCounts.Pizza], backgroundColor: ['#4ade80', '#fbbf24', '#fb923c', '#f87171'], borderWidth: 0 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            mainsData.forEach(m => {
+                if(energyCounts[m.category] !== undefined) energyCounts[m.category]++;
             });
 
-            new Chart(document.getElementById('timeChart').getContext('2d'), {
+            const ctxEnergy = document.getElementById('energyChart').getContext('2d');
+            new Chart(ctxEnergy, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Low Energy (⚡️)', 'Med Energy (⚖️)', 'Slow/Comfort (🛋️)', 'Pizza Night (🍕)'],
+                    datasets: [{
+                        data: [energyCounts.Low, energyCounts.Med, energyCounts.Slow, energyCounts.Pizza],
+                        backgroundColor: ['#4ade80', '#fbbf24', '#fb923c', '#f87171'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            const timeLabels = mainsData.map(m => m.name.split(' ').slice(0,2).join(' ')); 
+            const timeValues = mainsData.map(m => m.time);
+            
+            const ctxTime = document.getElementById('timeChart').getContext('2d');
+            new Chart(ctxTime, {
                 type: 'bar',
                 data: {
-                    labels: mainsData.map(m => m.name.split(' ').slice(0,2).join(' ')),
-                    datasets: [{ label: 'Minutes', data: mainsData.map(m => m.time), backgroundColor: '#a8a29e', borderRadius: 4 }]
+                    labels: timeLabels,
+                    datasets: [{
+                        label: 'Minutes',
+                        data: timeValues,
+                        backgroundColor: '#a8a29e',
+                        borderRadius: 4
+                    }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
             });
         }
     </script>
