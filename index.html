@@ -76,7 +76,7 @@
         <!-- Intro -->
         <section class="max-w-4xl mx-auto text-center">
             <p class="text-stone-600">
-                Welcome to your interactive <strong>Master Menu Bank</strong>. Select a <strong>Main</strong> and a <strong>Side</strong> below, or use the <span class="text-purple-600 font-bold">✨ Smart Chef</span> features (AI or Google Search).
+                Welcome to your interactive <strong>Master Menu Bank</strong>. Select a <strong>Main</strong>, <strong>Side</strong>, and <strong>Sweet</strong> below, or use the <span class="text-purple-600 font-bold">✨ Smart Chef</span> features.
             </p>
         </section>
 
@@ -86,20 +86,25 @@
                 <h2 class="font-bold text-stone-700">🍽️ Tonight's Selection</h2>
                 <span class="text-xs text-stone-400">Powered by Gemini AI (or Google Search)</span>
             </div>
-            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <!-- Updated Grid to 3 Columns for Sweets -->
+            <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
                 <!-- Main Slot -->
-                <div id="main-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-8 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group">
+                <div id="main-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group">
                     <span class="text-4xl mb-3 opacity-30">🍗</span>
-                    <h3 class="text-lg font-medium text-stone-400">Select a Main Dish</h3>
-                    <p class="text-sm text-stone-400">Choose from the menu below</p>
+                    <h3 class="text-lg font-medium text-stone-400">Select Main</h3>
+                    <p class="text-xs text-stone-400">From "Mains" tab</p>
                 </div>
-                <!-- Plus Sign -->
-                <div class="hidden md:flex justify-center text-stone-300 text-4xl font-light">+</div>
                 <!-- Side Slot -->
-                <div id="side-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-8 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative">
+                <div id="side-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative">
                     <span class="text-4xl mb-3 opacity-30">🥗</span>
-                    <h3 class="text-lg font-medium text-stone-400">Select a Side</h3>
-                    <p class="text-sm text-stone-400">Choose from the menu below</p>
+                    <h3 class="text-lg font-medium text-stone-400">Select Side</h3>
+                    <p class="text-xs text-stone-400">From "Sides" tab</p>
+                </div>
+                <!-- Sweet Slot -->
+                <div id="sweet-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative">
+                    <span class="text-4xl mb-3 opacity-30">🍪</span>
+                    <h3 class="text-lg font-medium text-stone-400">Something Sweet</h3>
+                    <p class="text-xs text-stone-400">From "Sweets" tab</p>
                 </div>
             </div>
             <!-- Summary Bar -->
@@ -126,8 +131,8 @@
             <div class="flex flex-wrap border-b border-stone-200">
                 <button onclick="switchTab('mains')" id="tab-mains" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors active-tab">🍗 Mains</button>
                 <button onclick="switchTab('sides')" id="tab-sides" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">🥗 Sides</button>
+                <button onclick="switchTab('sweets')" id="tab-sweets" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">🍪 Sweets</button>
                 <button onclick="switchTab('ideas')" id="tab-ideas" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">💡 Ideas</button>
-                <button onclick="switchTab('sweets')" id="tab-sweets" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">🍪 Something Sweet</button>
                 <button onclick="switchTab('emergency')" id="tab-emergency" class="px-6 py-4 font-medium text-red-600 hover:bg-red-50 border-b-2 border-transparent transition-colors">🧊 Emergency</button>
             </div>
             <div class="p-6 flex-grow bg-stone-50/50">
@@ -145,11 +150,11 @@
                 <div id="content-sides" class="tab-content hidden">
                     <div id="sides-grid" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
                 </div>
-                <div id="content-ideas" class="tab-content hidden">
-                    <div id="ideas-list" class="space-y-3"></div>
-                </div>
                 <div id="content-sweets" class="tab-content hidden">
                     <div id="sweets-grid" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+                </div>
+                <div id="content-ideas" class="tab-content hidden">
+                    <div id="ideas-list" class="space-y-3"></div>
                 </div>
                 <div id="content-emergency" class="tab-content hidden">
                     <div id="emergency-list" class="max-w-md mx-auto space-y-4"></div>
@@ -214,7 +219,7 @@
         ];
         const emergencyData = ["Morning Star Chicken Patties"];
 
-        let state = { selectedMain: null, selectedSide: null, filter: 'all' };
+        let state = { selectedMain: null, selectedSide: null, selectedSweet: null, filter: 'all' };
 
         // --- DOM ---
         const mainsGrid = document.getElementById('mains-grid');
@@ -224,6 +229,7 @@
         const emergencyList = document.getElementById('emergency-list');
         const mainSlot = document.getElementById('main-slot');
         const sideSlot = document.getElementById('side-slot');
+        const sweetSlot = document.getElementById('sweet-slot');
         const mealSummary = document.getElementById('meal-summary');
         const totalTimeDisplay = document.getElementById('total-time-display');
         const energyDisplay = document.getElementById('energy-display');
@@ -275,7 +281,9 @@
             sweetsGrid.innerHTML = '';
             sweetsData.forEach(sweet => {
                 const card = document.createElement('div');
-                card.className = `bg-white border border-stone-200 rounded-lg p-3 text-center`;
+                const isSelected = state.selectedSweet === sweet;
+                card.className = `bg-white border border-stone-200 rounded-lg p-3 text-center cursor-pointer hover:bg-pink-50 hover:border-pink-200 transition ${isSelected ? 'border-pink-500 bg-pink-50 ring-1 ring-pink-500' : ''}`;
+                card.onclick = () => selectSweet(sweet);
                 card.innerHTML = `<span class="text-sm font-medium text-stone-700">${sweet}</span>`;
                 sweetsGrid.appendChild(card);
             });
@@ -326,6 +334,20 @@
             updateSummary();
         }
 
+        function selectSweet(sweet) {
+            state.selectedSweet = sweet;
+            renderSweets();
+            sweetSlot.className = "bg-white border-2 border-pink-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
+            sweetSlot.innerHTML = `<span class="text-4xl mb-2">🍪</span><h3 class="text-xl font-bold text-pink-700 leading-tight mb-2">${sweet}</h3><button onclick="clearSweet()" class="text-xs text-stone-400 underline">Remove</button>`;
+        }
+        
+        function clearSweet() {
+            state.selectedSweet = null;
+            renderSweets();
+            sweetSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative";
+            sweetSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🍪</span><h3 class="text-lg font-medium text-stone-400">Something Sweet</h3><p class="text-xs text-stone-400">From "Sweets" tab</p>`;
+        }
+
         function updateSummary() {
             if (state.selectedMain) {
                 mealSummary.classList.remove('hidden');
@@ -357,7 +379,8 @@
         function randomizeMeal() {
             const randomMain = mainsData[Math.floor(Math.random() * mainsData.length)];
             const randomSide = sidesData[Math.floor(Math.random() * sidesData.length)];
-            selectMain(randomMain); selectSide(randomSide); switchTab('mains');
+            const randomSweet = sweetsData[Math.floor(Math.random() * sweetsData.length)];
+            selectMain(randomMain); selectSide(randomSide); selectSweet(randomSweet); switchTab('mains');
         }
 
         // --- GEMINI & SETTINGS ---
@@ -380,7 +403,7 @@
             if (!state.selectedMain) return;
             const key = localStorage.getItem('dinner_menu_gemini_key');
             
-            // GOOGLE SEARCH FALLBACK (Reverted per user request)
+            // GOOGLE SEARCH FALLBACK
             if (!key) { 
                 const query = encodeURIComponent(`recipe for ${state.selectedMain.name} ${state.selectedMain.notes || ''}`);
                 window.open(`https://www.google.com/search?q=${query}`, '_blank');
@@ -406,7 +429,7 @@
             if (!state.selectedMain) return;
             const key = localStorage.getItem('dinner_menu_gemini_key');
             
-            // GOOGLE SEARCH FALLBACK (Reverted per user request)
+            // GOOGLE SEARCH FALLBACK
             if (!key) { 
                 const query = encodeURIComponent(`best side dish pairing for ${state.selectedMain.name}`);
                 window.open(`https://www.google.com/search?q=${query}`, '_blank');
