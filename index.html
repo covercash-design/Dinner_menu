@@ -13,19 +13,12 @@
     <!-- Markdown Parser for AI Responses -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
-    <!-- Chosen Palette: Warm Neutrals with functional accents. 
-         Background: Warm White/Cream. 
-         Text: Dark Slate. 
-         Accents: Soft Sage (Low Energy), Warm Amber (Med Energy), Cozy Terracotta (Slow/Comfort). -->
-    
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #fdfbf7; /* Warm off-white */
+            background-color: #fdfbf7;
             color: #333;
         }
-
-        /* Chart Container Styling - Mandatory per requirements */
         .chart-container {
             position: relative;
             width: 100%;
@@ -36,38 +29,20 @@
             max-height: 400px;
         }
         @media (min-width: 768px) {
-            .chart-container {
-                height: 350px;
-            }
+            .chart-container { height: 350px; }
         }
-
-        /* Custom Scrollbar for card lists */
-        .custom-scroll::-webkit-scrollbar {
-            width: 8px;
-        }
-        .custom-scroll::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 4px;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
-
-        /* Card Selection States */
+        .custom-scroll::-webkit-scrollbar { width: 8px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        
         .selected-card {
-            border: 2px solid #ea580c; /* Orange-600 */
-            background-color: #fff7ed; /* Orange-50 */
+            border: 2px solid #ea580c;
+            background-color: #fff7ed;
             transform: scale(1.02);
             transition: all 0.2s ease-in-out;
         }
-
-        /* AI Loading Animation */
-        .sparkle-spin {
-            animation: spin 2s linear infinite;
-        }
+        .sparkle-spin { animation: spin 2s linear infinite; }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -75,13 +50,6 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
-
-    <!-- Application Structure Plan: 
-         1. Header: Simple branding and a "Randomize" action.
-         2. The Plate Builder (Top Section): Visual staging area. ADDED: Gemini-powered "Get Recipe" and "Suggest Pairing".
-         3. Analytics Dashboard (Middle Section): Energy/Time charts.
-         4. Content Browser (Bottom Section): Tabbed interface for Mains/Sides.
-    -->
 
     <!-- Header -->
     <header class="bg-white shadow-sm border-b border-stone-200 sticky top-0 z-50">
@@ -93,40 +61,41 @@
                     <p class="text-xs text-stone-500">Interactive Meal Planner</p>
                 </div>
             </div>
-            <button onclick="randomizeMeal()" class="bg-stone-800 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg">
-                <span>🎲</span> Spin for Dinner
-            </button>
+            <div class="flex gap-2">
+                <button onclick="openSettings()" class="text-stone-400 hover:text-stone-600 px-3 py-2 rounded-lg transition" title="API Settings">
+                    ⚙️
+                </button>
+                <button onclick="randomizeMeal()" class="bg-stone-800 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg">
+                    <span>🎲</span> Spin
+                </button>
+            </div>
         </div>
     </header>
 
     <main class="container mx-auto px-4 py-6 flex-grow space-y-8">
-
-        <!-- Intro Text -->
+        <!-- Intro -->
         <section class="max-w-4xl mx-auto text-center">
             <p class="text-stone-600">
-                Welcome to your interactive <strong>Master Menu Bank</strong>. Select a <strong>Main</strong> and a <strong>Side</strong> below, or use the <span class="text-purple-600 font-bold">✨ AI Chef</span> features to generate recipes and pairings instantly.
+                Welcome to your interactive <strong>Master Menu Bank</strong>. Select a <strong>Main</strong> and a <strong>Side</strong> below, or use the <span class="text-purple-600 font-bold">✨ AI Chef</span> features.
             </p>
         </section>
 
-        <!-- SECTION 1: The Plate Builder (State Display) -->
+        <!-- Plate Builder -->
         <section class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
             <div class="bg-stone-50 px-6 py-3 border-b border-stone-200 flex justify-between items-center">
                 <h2 class="font-bold text-stone-700">🍽️ Tonight's Selection</h2>
                 <span class="text-xs text-stone-400">Powered by Gemini AI</span>
             </div>
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                
-                <!-- Selected Main -->
+                <!-- Main Slot -->
                 <div id="main-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-8 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group">
                     <span class="text-4xl mb-3 opacity-30">🍗</span>
                     <h3 class="text-lg font-medium text-stone-400">Select a Main Dish</h3>
                     <p class="text-sm text-stone-400">Choose from the menu below</p>
                 </div>
-
                 <!-- Plus Sign -->
                 <div class="hidden md:flex justify-center text-stone-300 text-4xl font-light">+</div>
-
-                <!-- Selected Side -->
+                <!-- Side Slot -->
                 <div id="side-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-8 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative">
                     <span class="text-4xl mb-3 opacity-30">🥗</span>
                     <h3 class="text-lg font-medium text-stone-400">Select a Side</h3>
@@ -140,103 +109,49 @@
             </div>
         </section>
 
-        <!-- SECTION 2: Analytics Dashboard -->
+        <!-- Analytics -->
         <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <!-- Chart 1: Energy Levels -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
                 <h3 class="font-bold text-stone-700 mb-4 text-center">Menu Energy Levels</h3>
-                <div class="chart-container">
-                    <canvas id="energyChart"></canvas>
-                </div>
-                <p class="text-xs text-center text-stone-400 mt-2">Distribution of Low, Medium, and Slow/Comfort meals</p>
+                <div class="chart-container"><canvas id="energyChart"></canvas></div>
             </div>
-
-            <!-- Chart 2: Time Estimations -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
                 <h3 class="font-bold text-stone-700 mb-4 text-center">Cook Time Estimates</h3>
-                <div class="chart-container">
-                    <canvas id="timeChart"></canvas>
-                </div>
-                <p class="text-xs text-center text-stone-400 mt-2">Comparison of active cooking/simmer times</p>
+                <div class="chart-container"><canvas id="timeChart"></canvas></div>
             </div>
-
         </section>
 
-        <!-- SECTION 3: The Menu Browser -->
+        <!-- Menu Browser -->
         <section class="bg-white rounded-2xl shadow-sm border border-stone-200 min-h-[600px] flex flex-col">
-            
-            <!-- Tabs -->
             <div class="flex flex-wrap border-b border-stone-200">
-                <button onclick="switchTab('mains')" id="tab-mains" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors active-tab">
-                    🍗 Mains (The Heavy Lifting)
-                </button>
-                <button onclick="switchTab('sides')" id="tab-sides" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">
-                    🥗 Sides (The Easy Wins)
-                </button>
-                <button onclick="switchTab('ideas')" id="tab-ideas" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">
-                    💡 New Ideas
-                </button>
-                <button onclick="switchTab('emergency')" id="tab-emergency" class="px-6 py-4 font-medium text-red-600 hover:bg-red-50 border-b-2 border-transparent transition-colors">
-                    🧊 Emergency Valve
-                </button>
+                <button onclick="switchTab('mains')" id="tab-mains" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors active-tab">🍗 Mains</button>
+                <button onclick="switchTab('sides')" id="tab-sides" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">🥗 Sides</button>
+                <button onclick="switchTab('ideas')" id="tab-ideas" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">💡 Ideas</button>
+                <button onclick="switchTab('emergency')" id="tab-emergency" class="px-6 py-4 font-medium text-red-600 hover:bg-red-50 border-b-2 border-transparent transition-colors">🧊 Emergency</button>
             </div>
-
-            <!-- Tab Content Area -->
             <div class="p-6 flex-grow bg-stone-50/50">
-                
-                <!-- MAINS CONTENT -->
                 <div id="content-mains" class="tab-content block">
-                    <!-- Filters -->
                     <div class="flex flex-wrap gap-3 mb-6">
                         <span class="text-sm font-medium text-stone-500 self-center mr-2">Filter:</span>
                         <button onclick="filterMains('all')" class="filter-btn bg-stone-800 text-white px-3 py-1 rounded-full text-xs transition">All</button>
-                        <button onclick="filterMains('Low')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-green-50 px-3 py-1 rounded-full text-xs transition">⚡️ Low Energy</button>
-                        <button onclick="filterMains('Med')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-yellow-50 px-3 py-1 rounded-full text-xs transition">⚖️ Med Energy</button>
-                        <button onclick="filterMains('Slow')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-orange-50 px-3 py-1 rounded-full text-xs transition">🛋️ Slow/Comfort</button>
-                        <button onclick="filterMains('Pizza')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-red-50 px-3 py-1 rounded-full text-xs transition">🍕 Tradition</button>
+                        <button onclick="filterMains('Low')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-green-50 px-3 py-1 rounded-full text-xs transition">⚡️ Low</button>
+                        <button onclick="filterMains('Med')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-yellow-50 px-3 py-1 rounded-full text-xs transition">⚖️ Med</button>
+                        <button onclick="filterMains('Slow')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-orange-50 px-3 py-1 rounded-full text-xs transition">🛋️ Slow</button>
+                        <button onclick="filterMains('Pizza')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-red-50 px-3 py-1 rounded-full text-xs transition">🍕 Pizza</button>
                     </div>
-
-                    <!-- Grid -->
-                    <div id="mains-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <!-- JS will populate this -->
-                    </div>
+                    <div id="mains-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
                 </div>
-
-                <!-- SIDES CONTENT -->
                 <div id="content-sides" class="tab-content hidden">
-                    <p class="mb-4 text-sm text-stone-500">Pair your main dish with one of these reliable sides.</p>
-                    <div id="sides-grid" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                        <!-- JS will populate this -->
-                    </div>
+                    <div id="sides-grid" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
                 </div>
-
-                <!-- IDEAS CONTENT -->
                 <div id="content-ideas" class="tab-content hidden">
-                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-6">
-                        <h3 class="font-bold text-blue-800 mb-2">💡 Inspiration Station</h3>
-                        <p class="text-sm text-blue-700">These are recipes in the "To Try" queue. If you cook one this week and love it, promote it to a Main!</p>
-                    </div>
-                    <div id="ideas-list" class="space-y-3">
-                        <!-- JS will populate this -->
-                    </div>
+                    <div id="ideas-list" class="space-y-3"></div>
                 </div>
-
-                <!-- EMERGENCY CONTENT -->
                 <div id="content-emergency" class="tab-content hidden">
-                    <div class="bg-red-50 border border-red-100 rounded-xl p-8 text-center">
-                        <div class="text-5xl mb-4">🧊</div>
-                        <h3 class="text-2xl font-bold text-red-800 mb-2">Break Glass in Case of Emergency</h3>
-                        <p class="text-red-700 mb-6">Zero energy required. Ready to heat.</p>
-                        <div id="emergency-list" class="max-w-md mx-auto space-y-4">
-                            <!-- JS will populate this -->
-                        </div>
-                    </div>
+                    <div id="emergency-list" class="max-w-md mx-auto space-y-4"></div>
                 </div>
-
             </div>
         </section>
-
     </main>
 
     <!-- RECIPE MODAL -->
@@ -246,17 +161,28 @@
                 <h3 id="modal-title" class="text-xl font-bold text-stone-800">Recipe</h3>
                 <button onclick="closeModal()" class="text-stone-400 hover:text-stone-600 text-2xl">&times;</button>
             </div>
-            <div id="modal-content" class="p-8 overflow-y-auto custom-scroll prose prose-stone max-w-none">
-                <!-- AI Content will load here -->
+            <div id="modal-content" class="p-8 overflow-y-auto custom-scroll prose prose-stone max-w-none"></div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/50 hidden z-[70] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
+            <h3 class="text-xl font-bold text-stone-800 mb-4">⚙️ App Settings</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-stone-700 mb-1">Google Gemini API Key</label>
+                <input type="password" id="api-key-input" placeholder="Paste your AIza... key here" class="w-full p-2 border border-stone-300 rounded-lg text-sm">
+                <p class="text-xs text-stone-400 mt-1">Stored securely in your browser's local storage.</p>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeSettings()" class="px-4 py-2 text-stone-500 hover:text-stone-700">Cancel</button>
+                <button onclick="saveSettings()" class="bg-stone-800 text-white px-4 py-2 rounded-lg hover:bg-stone-700">Save</button>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript Logic -->
     <script>
-        const apiKey = "AIzaSyBn0gf31H6MrJL_x7nG1I1EBcIwVFvhrPQ"; 
-
-        // --- DATA STORAGE ---
+        // --- DATA ---
         const mainsData = [
             { id: 'm1', name: "Thai Coconut Curry Soup", time: 20, timeDisplay: "20 min", energy: "Low", icon: "⚡️", notes: "Turkey Sub", category: "Low" },
             { id: 'm2', name: "One-Pan Cheesy Tortilla Melts", time: 25, timeDisplay: "25 min", energy: "Low", icon: "⚡️", notes: "", category: "Low" },
@@ -268,96 +194,59 @@
             { id: 'm8', name: "Patrick’s Potato Soup", time: 240, timeDisplay: "Slow Cooker", energy: "Slow/Comfort", icon: "🛋️", notes: "", category: "Slow" },
             { id: 'm9', name: "Patrick’s Corn Chowder", time: 120, timeDisplay: "Simmer", energy: "Slow/Comfort", icon: "🛋️", notes: "", category: "Slow" },
             { id: 'm10', name: "Beef Roast Dinner", time: 420, timeDisplay: "Slow Cooker", energy: "Slow/Comfort", icon: "🛋️", notes: "", category: "Slow" },
-            { id: 'm11', name: "Homemade Pizza (Store Dough)", time: 15, timeDisplay: "15 min", energy: "Tradition", icon: "🍕", notes: "Friday Tradition", category: "Pizza" }
+            { id: 'm11', name: "Homemade Pizza", time: 15, timeDisplay: "15 min", energy: "Tradition", icon: "🍕", notes: "Friday Tradition", category: "Pizza" }
         ];
 
-        const sidesData = [
-            "Steamed Broccoli",
-            "Mashed Sweet Potatoes",
-            "Roasted Carrots (425°F)",
-            "Roasted Green Beans",
-            "Buttery Couscous",
-            "Jasmine Rice"
-        ];
-
+        const sidesData = ["Steamed Broccoli", "Mashed Sweet Potatoes", "Roasted Carrots (425°F)", "Roasted Green Beans", "Buttery Couscous", "Jasmine Rice"];
         const newIdeasData = [
             { name: "Vegan Taco Soup", meta: "30 min, Quinoa & Black Beans" },
-            { name: "Caramelized Onion, Steak & Cheese Skillet", meta: "Philly cheesesteak vibes, fast" },
+            { name: "Caramelized Onion, Steak & Cheese Skillet", meta: "Philly cheesesteak vibes" },
             { name: "Coconut Curry Lentil Veggie Stew", meta: "Meatless, similar to Thai soup" },
             { name: "Sheet-Pan Chimichurri Fish", meta: "30 min, light" },
             { name: "Shortcut Shakshuka with Feta", meta: "15 min, breakfast-for-dinner" }
         ];
+        const emergencyData = ["Morning Star Chicken Patties"];
 
-        const emergencyData = [
-            "Morning Star Chicken Patties"
-        ];
+        let state = { selectedMain: null, selectedSide: null, filter: 'all' };
 
-        // --- STATE MANAGEMENT ---
-        let state = {
-            selectedMain: null,
-            selectedSide: null,
-            filter: 'all'
-        };
-
-        // --- DOM ELEMENTS ---
+        // --- DOM ---
         const mainsGrid = document.getElementById('mains-grid');
         const sidesGrid = document.getElementById('sides-grid');
         const ideasList = document.getElementById('ideas-list');
         const emergencyList = document.getElementById('emergency-list');
-        
         const mainSlot = document.getElementById('main-slot');
         const sideSlot = document.getElementById('side-slot');
         const mealSummary = document.getElementById('meal-summary');
         const totalTimeDisplay = document.getElementById('total-time-display');
         const energyDisplay = document.getElementById('energy-display');
-        
         const modal = document.getElementById('recipe-modal');
-        const modalTitle = document.getElementById('modal-title');
         const modalContent = document.getElementById('modal-content');
+        const modalTitle = document.getElementById('modal-title');
+        const settingsModal = document.getElementById('settings-modal');
+        const apiKeyInput = document.getElementById('api-key-input');
 
-        // --- INITIALIZATION ---
+        // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
-            renderMains();
-            renderSides();
-            renderIdeas();
-            renderEmergency();
-            initCharts();
-            highlightTab('mains');
+            renderMains(); renderSides(); renderIdeas(); renderEmergency(); initCharts(); switchTab('mains');
+            
+            // Check for saved key
+            const savedKey = localStorage.getItem('dinner_menu_gemini_key');
+            if(savedKey) apiKeyInput.value = savedKey;
         });
 
-        // --- RENDERING FUNCTIONS ---
-
+        // --- CORE LOGIC ---
         function renderMains() {
             mainsGrid.innerHTML = '';
-            const filtered = state.filter === 'all' 
-                ? mainsData 
-                : mainsData.filter(m => m.category === state.filter);
-
+            const filtered = state.filter === 'all' ? mainsData : mainsData.filter(m => m.category === state.filter);
             filtered.forEach(dish => {
                 const card = document.createElement('div');
                 card.className = `bg-white border border-stone-200 rounded-xl p-4 cursor-pointer hover:shadow-md transition group ${state.selectedMain?.id === dish.id ? 'selected-card' : ''}`;
                 card.onclick = () => selectMain(dish);
-                
-                // Card Color Strip based on energy
-                let colorClass = 'bg-stone-200';
-                if(dish.category === 'Low') colorClass = 'bg-green-400';
-                if(dish.category === 'Med') colorClass = 'bg-amber-400';
-                if(dish.category === 'Slow') colorClass = 'bg-orange-400';
-                if(dish.category === 'Pizza') colorClass = 'bg-red-400';
-
+                let colorClass = dish.category === 'Low' ? 'bg-green-400' : dish.category === 'Med' ? 'bg-amber-400' : dish.category === 'Slow' ? 'bg-orange-400' : 'bg-red-400';
                 card.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xl">${dish.icon}</span>
-                            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600">${dish.energy}</span>
-                        </div>
-                        <div class="w-2 h-2 rounded-full ${colorClass}"></div>
-                    </div>
+                    <div class="flex justify-between items-start mb-2"><div class="flex items-center gap-2"><span class="text-xl">${dish.icon}</span><span class="text-xs font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600">${dish.energy}</span></div><div class="w-2 h-2 rounded-full ${colorClass}"></div></div>
                     <h3 class="font-bold text-stone-800 mb-1 group-hover:text-orange-700 transition">${dish.name}</h3>
-                    <div class="flex justify-between items-end mt-2">
-                        <span class="text-xs text-stone-500 font-mono">⏱ ${dish.timeDisplay}</span>
-                        ${dish.notes ? `<span class="text-[10px] text-stone-400 italic">${dish.notes}</span>` : ''}
-                    </div>
+                    <div class="flex justify-between items-end mt-2"><span class="text-xs text-stone-500 font-mono">⏱ ${dish.timeDisplay}</span></div>
                 `;
                 mainsGrid.appendChild(card);
             });
@@ -379,13 +268,7 @@
             newIdeasData.forEach(idea => {
                 const item = document.createElement('div');
                 item.className = 'flex items-center justify-between bg-white border border-stone-200 p-4 rounded-lg';
-                item.innerHTML = `
-                    <div>
-                        <h4 class="font-bold text-stone-800">${idea.name}</h4>
-                        <p class="text-xs text-stone-500">${idea.meta}</p>
-                    </div>
-                    <button class="text-xs bg-stone-100 hover:bg-stone-200 text-stone-600 px-3 py-1 rounded transition cursor-not-allowed" title="Simulation Only">Move to Mains</button>
-                `;
+                item.innerHTML = `<div><h4 class="font-bold text-stone-800">${idea.name}</h4><p class="text-xs text-stone-500">${idea.meta}</p></div>`;
                 ideasList.appendChild(item);
             });
         }
@@ -400,37 +283,27 @@
             });
         }
 
-        // --- INTERACTION HANDLERS ---
-
         function selectMain(dish) {
             state.selectedMain = dish;
-            renderMains(); 
-            
+            renderMains();
             mainSlot.className = "bg-white border-2 border-orange-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
             mainSlot.innerHTML = `
                 <span class="text-4xl mb-2">${dish.icon}</span>
                 <h3 class="text-xl font-bold text-stone-800 leading-tight mb-2">${dish.name}</h3>
                 <p class="text-sm text-stone-500 mb-4">Est: ${dish.timeDisplay}</p>
-                
-                <button onclick="generateRecipe()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:shadow-lg transition flex items-center gap-2 transform hover:scale-105">
-                    ✨ Generate Recipe
-                </button>
+                <button onclick="generateRecipe()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:shadow-lg transition flex items-center gap-2 transform hover:scale-105">✨ Generate Recipe</button>
             `;
             updateSummary();
         }
 
         function selectSide(side) {
             state.selectedSide = side;
-            renderSides(); 
-
+            renderSides();
             sideSlot.className = "bg-white border-2 border-green-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
             sideSlot.innerHTML = `
                 <span class="text-4xl mb-2">🥗</span>
                 <h3 class="text-xl font-bold text-stone-800 leading-tight mb-4">${side}</h3>
-                
-                <button onclick="suggestSide()" class="text-xs text-purple-600 font-medium hover:underline flex items-center gap-1">
-                    ✨ Ask AI for a better pairing
-                </button>
+                <button onclick="suggestSide()" class="text-xs text-purple-600 font-medium hover:underline flex items-center gap-1">✨ Ask AI for a better pairing</button>
             `;
             updateSummary();
         }
@@ -447,11 +320,9 @@
             state.filter = category;
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 if (btn.textContent.includes(category) || (category === 'all' && btn.textContent === 'All')) {
-                    btn.classList.add('bg-stone-800', 'text-white');
-                    btn.classList.remove('bg-white', 'text-stone-600');
+                    btn.classList.add('bg-stone-800', 'text-white'); btn.classList.remove('bg-white', 'text-stone-600');
                 } else {
-                    btn.classList.remove('bg-stone-800', 'text-white');
-                    btn.classList.add('bg-white', 'text-stone-600');
+                    btn.classList.remove('bg-stone-800', 'text-white'); btn.classList.add('bg-white', 'text-stone-600');
                 }
             });
             renderMains();
@@ -460,207 +331,92 @@
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById(`content-${tabId}`).classList.remove('hidden');
-
-            document.querySelectorAll('button[id^="tab-"]').forEach(btn => {
-                btn.classList.remove('border-stone-800', 'text-stone-800', 'bg-stone-50');
-                btn.classList.add('border-transparent');
-            });
-
+            document.querySelectorAll('button[id^="tab-"]').forEach(btn => { btn.classList.remove('border-stone-800', 'text-stone-800', 'bg-stone-50'); btn.classList.add('border-transparent'); });
             const activeBtn = document.getElementById(`tab-${tabId}`);
-            activeBtn.classList.remove('border-transparent');
-            activeBtn.classList.add('border-stone-800', 'text-stone-800', 'bg-stone-50');
-        }
-
-        function highlightTab(tabId) {
-             switchTab(tabId);
+            activeBtn.classList.remove('border-transparent'); activeBtn.classList.add('border-stone-800', 'text-stone-800', 'bg-stone-50');
         }
 
         function randomizeMeal() {
             const randomMain = mainsData[Math.floor(Math.random() * mainsData.length)];
             const randomSide = sidesData[Math.floor(Math.random() * sidesData.length)];
-            
-            selectMain(randomMain);
-            selectSide(randomSide);
-            switchTab('mains');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            selectMain(randomMain); selectSide(randomSide); switchTab('mains');
         }
 
-        // --- GEMINI API INTEGRATION ---
-        
+        // --- GEMINI & SETTINGS ---
+        function openSettings() { settingsModal.classList.remove('hidden'); }
+        function closeSettings() { settingsModal.classList.add('hidden'); }
+        function saveSettings() {
+            const key = apiKeyInput.value.trim();
+            if(key) {
+                localStorage.setItem('dinner_menu_gemini_key', key);
+                closeSettings();
+                alert("API Key saved securely to this browser.");
+            }
+        }
+
         async function generateRecipe() {
             if (!state.selectedMain) return;
+            const key = localStorage.getItem('dinner_menu_gemini_key');
+            if (!key) { openSettings(); alert("Please save your Google API Key in settings first."); return; }
 
-            openModal("✨ Generating Recipe...");
-            modalContent.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-12">
-                    <div class="text-4xl mb-4 sparkle-spin">✨</div>
-                    <p class="text-stone-500 animate-pulse">Consulting the digital chef...</p>
-                </div>
-            `;
+            modal.classList.remove('hidden');
+            modalContent.innerHTML = `<div class="flex flex-col items-center justify-center py-12"><div class="text-4xl mb-4 sparkle-spin">✨</div><p class="text-stone-500 animate-pulse">Consulting the digital chef...</p></div>`;
+            modalTitle.textContent = "Generating...";
 
-            const prompt = `
-                You are a helpful home cooking assistant. 
-                Generate a concise recipe card for: "${state.selectedMain.name}".
-                
-                Context/Notes: "${state.selectedMain.notes}".
-                The user has marked this as a "${state.selectedMain.energy}" energy meal.
-                
-                If the energy level is 'Low', prioritize shortcuts and minimal prep.
-                If it's 'Slow/Comfort', emphasize the cozy process.
-
-                Format as Markdown:
-                ## [Dish Name]
-                **Est. Time:** [Time]
-                
-                ### Ingredients
-                * List...
-
-                ### Instructions
-                1. Step 1...
-            `;
-
-            const result = await callGemini(prompt);
+            const prompt = `Generate a concise recipe card for "${state.selectedMain.name}". Notes: "${state.selectedMain.notes}". Energy Level: ${state.selectedMain.energy}. Format as Markdown.`;
+            const result = await callGemini(prompt, key);
             
             if (result) {
                 modalTitle.textContent = `Recipe: ${state.selectedMain.name}`;
                 modalContent.innerHTML = marked.parse(result);
             } else {
-                modalContent.innerHTML = `<p class="text-red-500 text-center">Sorry, the chef is out to lunch. (API Error)</p>`;
+                modalContent.innerHTML = `<p class="text-red-500 text-center">API Error. Check your key.</p>`;
             }
         }
 
         async function suggestSide() {
             if (!state.selectedMain) return;
-            
-            // Show loading state in side slot
+            const key = localStorage.getItem('dinner_menu_gemini_key');
+            if (!key) { openSettings(); alert("Please save your Google API Key in settings first."); return; }
+
             const originalContent = sideSlot.innerHTML;
-            sideSlot.innerHTML = `
-                <div class="flex flex-col items-center">
-                    <div class="text-2xl mb-2 sparkle-spin">✨</div>
-                    <p class="text-xs text-stone-500">Thinking...</p>
-                </div>
-            `;
+            sideSlot.innerHTML = `<div class="flex flex-col items-center"><div class="text-2xl mb-2 sparkle-spin">✨</div><p class="text-xs text-stone-500">Thinking...</p></div>`;
 
-            const prompt = `
-                Suggest exactly ONE perfect side dish to pair with "${state.selectedMain.name}".
-                Consider flavors, texture balance, and color.
-                
-                Return ONLY the name of the side dish on the first line, 
-                and a very short (1 sentence) explanation on the second line.
-                Do not use markdown.
-            `;
-
-            const result = await callGemini(prompt);
+            const prompt = `Suggest ONE perfect side dish for "${state.selectedMain.name}". Return ONLY the side name on line 1 and a 1-sentence reason on line 2.`;
+            const result = await callGemini(prompt, key);
 
             if (result) {
                 const lines = result.split('\n').filter(line => line.trim() !== '');
                 const sideName = lines[0] || "Garlic Bread";
                 const reason = lines[1] || "It goes well with everything.";
-                
-                state.selectedSide = sideName; // update state
-                
+                state.selectedSide = sideName;
                 sideSlot.className = "bg-white border-2 border-purple-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
-                sideSlot.innerHTML = `
-                    <span class="text-4xl mb-2">✨</span>
-                    <h3 class="text-xl font-bold text-purple-700 leading-tight mb-2">${sideName}</h3>
-                    <p class="text-xs text-stone-500 italic mb-4">"${reason}"</p>
-                    <button onclick="renderSides()" class="text-xs text-stone-400 underline">Reset</button>
-                `;
+                sideSlot.innerHTML = `<span class="text-4xl mb-2">✨</span><h3 class="text-xl font-bold text-purple-700 leading-tight mb-2">${sideName}</h3><p class="text-xs text-stone-500 italic mb-4">"${reason}"</p><button onclick="renderSides()" class="text-xs text-stone-400 underline">Reset</button>`;
             } else {
                 sideSlot.innerHTML = originalContent;
-                alert("AI request failed. Please check connection.");
+                alert("AI Error. Check your key.");
             }
         }
 
-        async function callGemini(prompt) {
-            if (!apiKey) {
-                alert("API Key is missing in the code. Please edit the 'apiKey' variable.");
-                return null;
-            }
-
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }]
-            };
-
+        async function callGemini(prompt, key) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${key}`;
             try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const data = await response.json();
                 return data.candidates?.[0]?.content?.parts?.[0]?.text;
-            } catch (e) {
-                console.error("Gemini API Error:", e);
-                return null;
-            }
+            } catch (e) { return null; }
         }
 
-        function openModal(title) {
-            modalTitle.textContent = title;
-            modal.classList.remove('hidden');
-        }
-
-        function closeModal() {
-            modal.classList.add('hidden');
-        }
-
-        // Close modal on outside click
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
+        function closeModal() { modal.classList.add('hidden'); }
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
         // --- CHARTS ---
         function initCharts() {
-            const energyCounts = { Low: 0, Med: 0, Slow: 0, Pizza: 0 };
-            mainsData.forEach(m => {
-                if(energyCounts[m.category] !== undefined) energyCounts[m.category]++;
-            });
-
             const ctxEnergy = document.getElementById('energyChart').getContext('2d');
-            new Chart(ctxEnergy, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Low Energy (⚡️)', 'Med Energy (⚖️)', 'Slow/Comfort (🛋️)', 'Pizza Night (🍕)'],
-                    datasets: [{
-                        data: [energyCounts.Low, energyCounts.Med, energyCounts.Slow, energyCounts.Pizza],
-                        backgroundColor: ['#4ade80', '#fbbf24', '#fb923c', '#f87171'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
-                }
-            });
+            new Chart(ctxEnergy, { type: 'doughnut', data: { labels: ['Low', 'Med', 'Slow', 'Pizza'], datasets: [{ data: [2, 4, 4, 1], backgroundColor: ['#4ade80', '#fbbf24', '#fb923c', '#f87171'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
 
-            const timeLabels = mainsData.map(m => m.name.split(' ').slice(0,2).join(' ')); 
-            const timeValues = mainsData.map(m => m.time);
-            
             const ctxTime = document.getElementById('timeChart').getContext('2d');
-            new Chart(ctxTime, {
-                type: 'bar',
-                data: {
-                    labels: timeLabels,
-                    datasets: [{
-                        label: 'Minutes',
-                        data: timeValues,
-                        backgroundColor: '#a8a29e',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } },
-                    plugins: { legend: { display: false } }
-                }
-            });
+            new Chart(ctxTime, { type: 'bar', data: { labels: ['Thai Soup', 'Tortilla', 'Mozz Chx', 'Soy Meatloaves', 'Onion Chx', 'Korean Loaf', 'Chili', 'Potato Soup', 'Corn Chowder', 'Beef Roast'], datasets: [{ label: 'Minutes', data: [20, 25, 30, 40, 40, 45, 120, 240, 120, 420], backgroundColor: '#a8a29e', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } } });
         }
     </script>
 </body>
