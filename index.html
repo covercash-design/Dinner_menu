@@ -76,7 +76,7 @@
         <!-- Intro -->
         <section class="max-w-4xl mx-auto text-center">
             <p class="text-stone-600">
-                Welcome to your interactive <strong>Master Menu Bank</strong>. Select a <strong>Main</strong> and a <strong>Side</strong> below, or use the <span class="text-purple-600 font-bold">✨ AI Chef</span> features.
+                Welcome to your interactive <strong>Master Menu Bank</strong>. Select a <strong>Main</strong> and a <strong>Side</strong> below, or use the <span class="text-purple-600 font-bold">✨ Smart Chef</span> features (AI or Google Search).
             </p>
         </section>
 
@@ -84,7 +84,7 @@
         <section class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
             <div class="bg-stone-50 px-6 py-3 border-b border-stone-200 flex justify-between items-center">
                 <h2 class="font-bold text-stone-700">🍽️ Tonight's Selection</h2>
-                <span class="text-xs text-stone-400">Powered by Gemini AI</span>
+                <span class="text-xs text-stone-400">Powered by Gemini AI (or Google Search)</span>
             </div>
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                 <!-- Main Slot -->
@@ -172,7 +172,7 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium text-stone-700 mb-1">Google Gemini API Key</label>
                 <input type="password" id="api-key-input" placeholder="Paste your AIza... key here" class="w-full p-2 border border-stone-300 rounded-lg text-sm">
-                <p class="text-xs text-stone-400 mt-1">Stored securely in your browser's local storage.</p>
+                <p class="text-xs text-stone-400 mt-1">Stored securely in your browser's local storage.<br><strong>Leave blank to use Google Search fallback.</strong></p>
             </div>
             <div class="flex justify-end gap-2">
                 <button onclick="closeSettings()" class="px-4 py-2 text-stone-500 hover:text-stone-700">Cancel</button>
@@ -291,7 +291,7 @@
                 <span class="text-4xl mb-2">${dish.icon}</span>
                 <h3 class="text-xl font-bold text-stone-800 leading-tight mb-2">${dish.name}</h3>
                 <p class="text-sm text-stone-500 mb-4">Est: ${dish.timeDisplay}</p>
-                <button onclick="generateRecipe()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:shadow-lg transition flex items-center gap-2 transform hover:scale-105">✨ Generate Recipe</button>
+                <button onclick="generateRecipe()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:shadow-lg transition flex items-center gap-2 transform hover:scale-105">✨ Find/Generate Recipe</button>
             `;
             updateSummary();
         }
@@ -303,7 +303,7 @@
             sideSlot.innerHTML = `
                 <span class="text-4xl mb-2">🥗</span>
                 <h3 class="text-xl font-bold text-stone-800 leading-tight mb-4">${side}</h3>
-                <button onclick="suggestSide()" class="text-xs text-purple-600 font-medium hover:underline flex items-center gap-1">✨ Ask AI for a better pairing</button>
+                <button onclick="suggestSide()" class="text-xs text-purple-600 font-medium hover:underline flex items-center gap-1">✨ Ask AI (or Google)</button>
             `;
             updateSummary();
         }
@@ -351,13 +351,23 @@
                 localStorage.setItem('dinner_menu_gemini_key', key);
                 closeSettings();
                 alert("API Key saved securely to this browser.");
+            } else {
+                localStorage.removeItem('dinner_menu_gemini_key');
+                closeSettings();
+                alert("API Key removed. Fallback mode active.");
             }
         }
 
         async function generateRecipe() {
             if (!state.selectedMain) return;
             const key = localStorage.getItem('dinner_menu_gemini_key');
-            if (!key) { openSettings(); alert("Please save your Google API Key in settings first."); return; }
+            
+            // GOOGLE SEARCH FALLBACK (Reverted per user request)
+            if (!key) { 
+                const query = encodeURIComponent(`recipe for ${state.selectedMain.name} ${state.selectedMain.notes || ''}`);
+                window.open(`https://www.google.com/search?q=${query}`, '_blank');
+                return; 
+            }
 
             modal.classList.remove('hidden');
             modalContent.innerHTML = `<div class="flex flex-col items-center justify-center py-12"><div class="text-4xl mb-4 sparkle-spin">✨</div><p class="text-stone-500 animate-pulse">Consulting the digital chef...</p></div>`;
@@ -377,7 +387,13 @@
         async function suggestSide() {
             if (!state.selectedMain) return;
             const key = localStorage.getItem('dinner_menu_gemini_key');
-            if (!key) { openSettings(); alert("Please save your Google API Key in settings first."); return; }
+            
+            // GOOGLE SEARCH FALLBACK (Reverted per user request)
+            if (!key) { 
+                const query = encodeURIComponent(`best side dish pairing for ${state.selectedMain.name}`);
+                window.open(`https://www.google.com/search?q=${query}`, '_blank');
+                return; 
+            }
 
             const originalContent = sideSlot.innerHTML;
             sideSlot.innerHTML = `<div class="flex flex-col items-center"><div class="text-2xl mb-2 sparkle-spin">✨</div><p class="text-xs text-stone-500">Thinking...</p></div>`;
