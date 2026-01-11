@@ -127,6 +127,7 @@
                 <button onclick="switchTab('mains')" id="tab-mains" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors active-tab">🍗 Mains</button>
                 <button onclick="switchTab('sides')" id="tab-sides" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">🥗 Sides</button>
                 <button onclick="switchTab('ideas')" id="tab-ideas" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">💡 Ideas</button>
+                <button onclick="switchTab('sweets')" id="tab-sweets" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">🍪 Something Sweet</button>
                 <button onclick="switchTab('emergency')" id="tab-emergency" class="px-6 py-4 font-medium text-red-600 hover:bg-red-50 border-b-2 border-transparent transition-colors">🧊 Emergency</button>
             </div>
             <div class="p-6 flex-grow bg-stone-50/50">
@@ -146,6 +147,9 @@
                 </div>
                 <div id="content-ideas" class="tab-content hidden">
                     <div id="ideas-list" class="space-y-3"></div>
+                </div>
+                <div id="content-sweets" class="tab-content hidden">
+                    <div id="sweets-grid" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
                 </div>
                 <div id="content-emergency" class="tab-content hidden">
                     <div id="emergency-list" class="max-w-md mx-auto space-y-4"></div>
@@ -198,6 +202,9 @@
         ];
 
         const sidesData = ["Steamed Broccoli", "Mashed Sweet Potatoes", "Roasted Carrots (425°F)", "Roasted Green Beans", "Buttery Couscous", "Jasmine Rice"];
+        
+        const sweetsData = ["Dark Chocolate", "Berries & Cream", "Frozen Yoghurt", "Fruit Salad"];
+
         const newIdeasData = [
             { name: "Vegan Taco Soup", meta: "30 min, Quinoa & Black Beans" },
             { name: "Caramelized Onion, Steak & Cheese Skillet", meta: "Philly cheesesteak vibes" },
@@ -212,6 +219,7 @@
         // --- DOM ---
         const mainsGrid = document.getElementById('mains-grid');
         const sidesGrid = document.getElementById('sides-grid');
+        const sweetsGrid = document.getElementById('sweets-grid');
         const ideasList = document.getElementById('ideas-list');
         const emergencyList = document.getElementById('emergency-list');
         const mainSlot = document.getElementById('main-slot');
@@ -227,7 +235,7 @@
 
         // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
-            renderMains(); renderSides(); renderIdeas(); renderEmergency(); initCharts(); switchTab('mains');
+            renderMains(); renderSides(); renderSweets(); renderIdeas(); renderEmergency(); initCharts(); switchTab('mains');
             
             // Check for saved key
             const savedKey = localStorage.getItem('dinner_menu_gemini_key');
@@ -260,6 +268,16 @@
                 card.onclick = () => selectSide(side);
                 card.innerHTML = `<span class="text-sm font-medium text-stone-700">${side}</span>`;
                 sidesGrid.appendChild(card);
+            });
+        }
+        
+        function renderSweets() {
+            sweetsGrid.innerHTML = '';
+            sweetsData.forEach(sweet => {
+                const card = document.createElement('div');
+                card.className = `bg-white border border-stone-200 rounded-lg p-3 text-center`;
+                card.innerHTML = `<span class="text-sm font-medium text-stone-700">${sweet}</span>`;
+                sweetsGrid.appendChild(card);
             });
         }
 
