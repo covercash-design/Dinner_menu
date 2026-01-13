@@ -42,6 +42,20 @@
             transform: scale(1.02);
             transition: all 0.2s ease-in-out;
         }
+        /* Draggable Styles */
+        .draggable-source {
+            cursor: grab;
+        }
+        .draggable-source:active {
+            cursor: grabbing;
+        }
+        .drag-over {
+            background-color: #f0fdf4 !important; /* Green-50 */
+            border-color: #22c55e !important; /* Green-500 */
+            border-style: solid !important;
+            transform: scale(1.02);
+        }
+
         .sparkle-spin { animation: spin 2s linear infinite; }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -55,7 +69,6 @@
             body > * { display: none !important; }
             body { background: white !important; }
             
-            /* If Recipe Modal is open, print that */
             body:has(#recipe-modal:not(.hidden)) #recipe-modal {
                 display: block !important;
                 position: static !important;
@@ -65,7 +78,6 @@
             body:has(#recipe-modal:not(.hidden)) #recipe-modal button { display: none !important; }
             body:has(#recipe-modal:not(.hidden)) #modal-content { overflow: visible !important; }
 
-            /* If Recipe Modal is CLOSED, print the Weekly Menu */
             body:not(:has(#recipe-modal:not(.hidden))) #print-view {
                 display: block !important;
                 position: absolute;
@@ -94,11 +106,14 @@
                     <span>🖨️</span> <span class="hidden sm:inline">Print Week</span>
                 </button>
                 <button onclick="openSettings()" class="text-stone-500 hover:text-stone-800 px-3 py-2 rounded-lg transition border border-stone-200 hover:bg-stone-50 text-sm font-medium shadow-sm flex items-center gap-2" title="API Settings">
-                    <span>⚙️</span> <span class="hidden sm:inline">Settings</span>
+                    <span>⚙️</span>
                 </button>
-                <!-- Reset button now clears current day only, maybe add full reset logic later -->
                 <button onclick="resetDay()" class="text-stone-500 hover:text-stone-800 px-3 py-2 rounded-lg transition border border-stone-200 hover:bg-stone-50 text-sm font-medium shadow-sm flex items-center gap-1" title="Clear Current Day">
-                    <span>🗑️</span> Clear Day
+                    <span>🗑️</span>
+                </button>
+                <!-- RESTORED SPIN BUTTON -->
+                <button onclick="randomizeMeal()" class="bg-stone-800 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg ml-2">
+                    <span>🎲</span> Spin
                 </button>
             </div>
         </div>
@@ -108,7 +123,7 @@
         <!-- Intro -->
         <section class="max-w-4xl mx-auto text-center">
             <p class="text-stone-600">
-                Welcome to your <strong>Weekly Planner</strong>. Select a Day below, then fill your plate.
+                Welcome to your <strong>Weekly Planner</strong>. Select a Day, then <strong>drag & drop</strong> items from below to fill your plate (or click to select).
             </p>
         </section>
 
@@ -123,31 +138,31 @@
             </div>
         </section>
 
-        <!-- Plate Builder (Context Aware) -->
+        <!-- Plate Builder (Context Aware) with DROP ZONES -->
         <section class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden relative">
             <div class="bg-stone-50 px-6 py-3 border-b border-stone-200 flex justify-between items-center">
                 <h2 class="font-bold text-stone-700">🍽️ <span id="current-day-label">Monday</span>'s Dinner</h2>
-                <span class="text-xs text-stone-400">Powered by Gemini AI (or Google Search)</span>
+                <span class="text-xs text-stone-400">Drag items here or ask AI</span>
             </div>
             
             <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-                <!-- Main Slot -->
-                <div id="main-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group">
-                    <span class="text-4xl mb-3 opacity-30">🍗</span>
-                    <h3 class="text-lg font-medium text-stone-400">Select Main</h3>
-                    <p class="text-xs text-stone-400">From "Mains" tab</p>
+                <!-- Main Slot (Drop Zone) -->
+                <div id="main-slot" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="drop(event, 'main')" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group">
+                    <span class="text-4xl mb-3 opacity-30 pointer-events-none">🍗</span>
+                    <h3 class="text-lg font-medium text-stone-400 pointer-events-none">Select Main</h3>
+                    <p class="text-xs text-stone-400 pointer-events-none">Drag Main Here</p>
                 </div>
-                <!-- Side Slot -->
-                <div id="side-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative">
-                    <span class="text-4xl mb-3 opacity-30">🥗</span>
-                    <h3 class="text-lg font-medium text-stone-400">Select Side</h3>
-                    <p class="text-xs text-stone-400">From "Sides" tab</p>
+                <!-- Side Slot (Drop Zone) -->
+                <div id="side-slot" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="drop(event, 'side')" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative">
+                    <span class="text-4xl mb-3 opacity-30 pointer-events-none">🥗</span>
+                    <h3 class="text-lg font-medium text-stone-400 pointer-events-none">Select Side</h3>
+                    <p class="text-xs text-stone-400 pointer-events-none">Drag Side Here</p>
                 </div>
-                <!-- Sweet Slot -->
-                <div id="sweet-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative">
-                    <span class="text-4xl mb-3 opacity-30">🍪</span>
-                    <h3 class="text-lg font-medium text-stone-400">Something Sweet</h3>
-                    <p class="text-xs text-stone-400">From "Sweets" tab</p>
+                <!-- Sweet Slot (Drop Zone) -->
+                <div id="sweet-slot" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="drop(event, 'sweet')" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative">
+                    <span class="text-4xl mb-3 opacity-30 pointer-events-none">🍪</span>
+                    <h3 class="text-lg font-medium text-stone-400 pointer-events-none">Something Sweet</h3>
+                    <p class="text-xs text-stone-400 pointer-events-none">Drag Sweet Here</p>
                 </div>
             </div>
             <!-- Summary Bar -->
@@ -238,7 +253,7 @@
         </div>
     </div>
 
-    <!-- PRINT VIEW CONTAINER (Hidden normally, visible on Print) -->
+    <!-- PRINT VIEW CONTAINER -->
     <div id="print-view" class="bg-white">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-stone-800">Weekly Dinner Plan</h1>
@@ -277,9 +292,7 @@
         ];
         const emergencyData = ["Morning Star Chicken Patties"];
 
-        // --- STATE ---
         let currentDay = 'Mon';
-        // Initialize 5-day plan
         let weeklyPlan = {
             'Mon': { main: null, side: null, sweet: null },
             'Tue': { main: null, side: null, sweet: null },
@@ -315,8 +328,6 @@
             renderAllTabs();
             selectDay('Mon');
             initCharts();
-            
-            // Check for saved key
             const savedKey = localStorage.getItem('dinner_menu_gemini_key');
             if(savedKey) apiKeyInput.value = savedKey;
         });
@@ -331,11 +342,42 @@
             updatePrintView();
         }
 
-        // --- DAY SELECTION LOGIC ---
+        // --- DRAG AND DROP ---
+        function drag(ev, type, idOrName) {
+            ev.dataTransfer.setData("type", type);
+            ev.dataTransfer.setData("idOrName", idOrName);
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+            ev.currentTarget.classList.add('drag-over');
+        }
+
+        function leaveDrop(ev) {
+            ev.currentTarget.classList.remove('drag-over');
+        }
+
+        function drop(ev, targetSlotType) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('drag-over');
+            const draggedType = ev.dataTransfer.getData("type");
+            const idOrName = ev.dataTransfer.getData("idOrName");
+
+            if (draggedType === targetSlotType) {
+                if (draggedType === 'main') {
+                    const dish = mainsData.find(m => m.id === idOrName);
+                    if (dish) selectMain(dish);
+                } else if (draggedType === 'side') {
+                    selectSide(idOrName);
+                } else if (draggedType === 'sweet') {
+                    selectSweet(idOrName);
+                }
+            }
+        }
+
+        // --- CORE LOGIC ---
         function selectDay(day) {
             currentDay = day;
-            
-            // Update Day Tabs UI
             document.querySelectorAll('.day-tab').forEach(btn => {
                 if(btn.id === `day-${day}`) {
                     btn.classList.add('bg-stone-800', 'text-white', 'shadow-md');
@@ -345,14 +387,9 @@
                     btn.classList.add('text-stone-500', 'hover:bg-stone-100');
                 }
             });
-
-            // Update Labels
             const fullDays = {'Mon':'Monday', 'Tue':'Tuesday', 'Wed':'Wednesday', 'Thu':'Thursday', 'Fri':'Friday'};
             currentDayLabel.textContent = fullDays[day];
-
-            // Render existing selection for this day
             renderPlateBuilder();
-            // Re-render grids to highlight current selection
             renderAllTabs();
         }
 
@@ -370,7 +407,7 @@
                 `;
             } else {
                 mainSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group";
-                mainSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🍗</span><h3 class="text-lg font-medium text-stone-400">Select Main</h3><p class="text-xs text-stone-400">From "Mains" tab</p>`;
+                mainSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30 pointer-events-none">🍗</span><h3 class="text-lg font-medium text-stone-400 pointer-events-none">Select Main</h3><p class="text-xs text-stone-400 pointer-events-none">Drag Main Here</p>`;
             }
 
             // Side
@@ -383,7 +420,7 @@
                 `;
             } else {
                 sideSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative";
-                sideSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🥗</span><h3 class="text-lg font-medium text-stone-400">Select Side</h3><p class="text-xs text-stone-400">From "Sides" tab</p>`;
+                sideSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30 pointer-events-none">🥗</span><h3 class="text-lg font-medium text-stone-400 pointer-events-none">Select Side</h3><p class="text-xs text-stone-400 pointer-events-none">Drag Side Here</p>`;
             }
 
             // Sweet
@@ -392,7 +429,7 @@
                 sweetSlot.innerHTML = `<span class="text-4xl mb-2">🍪</span><h3 class="text-xl font-bold text-pink-700 leading-tight mb-2">${plan.sweet}</h3><button onclick="selectSweet(null)" class="text-xs text-stone-400 underline">Remove</button>`;
             } else {
                 sweetSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative";
-                sweetSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🍪</span><h3 class="text-lg font-medium text-stone-400">Something Sweet</h3><p class="text-xs text-stone-400">From "Sweets" tab</p>`;
+                sweetSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30 pointer-events-none">🍪</span><h3 class="text-lg font-medium text-stone-400 pointer-events-none">Something Sweet</h3><p class="text-xs text-stone-400 pointer-events-none">Drag Sweet Here</p>`;
             }
 
             updateSummary();
@@ -403,7 +440,7 @@
             weeklyPlan[currentDay].main = dish;
             savePlanToStorage();
             renderPlateBuilder();
-            renderMains(); // Update grid highlight
+            renderMains(); 
         }
 
         function selectSide(side) {
@@ -427,16 +464,6 @@
             renderAllTabs();
         }
 
-        function resetPlanner() {
-            // Full Reset (Optional usage)
-            if(confirm("Clear the entire week?")) {
-                Object.keys(weeklyPlan).forEach(day => weeklyPlan[day] = { main: null, side: null, sweet: null });
-                savePlanToStorage();
-                resetDay(); // re-renders current
-            }
-        }
-
-        // --- RENDERING TABS ---
         function renderAllTabs() {
             renderMains(); renderSides(); renderSweets(); renderIdeas(); renderEmergency();
         }
@@ -447,13 +474,15 @@
             filtered.forEach(dish => {
                 const card = document.createElement('div');
                 const isSelected = weeklyPlan[currentDay].main?.id === dish.id;
-                card.className = `bg-white border border-stone-200 rounded-xl p-4 cursor-pointer hover:shadow-md transition group ${isSelected ? 'selected-card' : ''}`;
+                card.draggable = true;
+                card.ondragstart = (event) => drag(event, 'main', dish.id);
+                card.className = `draggable-source bg-white border border-stone-200 rounded-xl p-4 cursor-pointer hover:shadow-md transition group ${isSelected ? 'selected-card' : ''}`;
                 card.onclick = () => selectMain(dish);
                 let colorClass = dish.category === 'Low' ? 'bg-green-400' : dish.category === 'Med' ? 'bg-amber-400' : dish.category === 'Slow' ? 'bg-orange-400' : 'bg-red-400';
                 card.innerHTML = `
-                    <div class="flex justify-between items-start mb-2"><div class="flex items-center gap-2"><span class="text-xl">${dish.icon}</span><span class="text-xs font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600">${dish.energy}</span></div><div class="w-2 h-2 rounded-full ${colorClass}"></div></div>
-                    <h3 class="font-bold text-stone-800 mb-1 group-hover:text-orange-700 transition">${dish.name}</h3>
-                    <div class="flex justify-between items-end mt-2"><span class="text-xs text-stone-500 font-mono">⏱ ${dish.timeDisplay}</span></div>
+                    <div class="flex justify-between items-start mb-2 pointer-events-none"><div class="flex items-center gap-2"><span class="text-xl">${dish.icon}</span><span class="text-xs font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600">${dish.energy}</span></div><div class="w-2 h-2 rounded-full ${colorClass}"></div></div>
+                    <h3 class="font-bold text-stone-800 mb-1 group-hover:text-orange-700 transition pointer-events-none">${dish.name}</h3>
+                    <div class="flex justify-between items-end mt-2 pointer-events-none"><span class="text-xs text-stone-500 font-mono">⏱ ${dish.timeDisplay}</span></div>
                 `;
                 mainsGrid.appendChild(card);
             });
@@ -464,9 +493,11 @@
             sidesData.forEach(side => {
                 const card = document.createElement('div');
                 const isSelected = weeklyPlan[currentDay].side === side;
-                card.className = `bg-white border border-stone-200 rounded-lg p-3 cursor-pointer hover:bg-green-50 hover:border-green-200 transition text-center ${isSelected ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : ''}`;
+                card.draggable = true;
+                card.ondragstart = (event) => drag(event, 'side', side);
+                card.className = `draggable-source bg-white border border-stone-200 rounded-lg p-3 cursor-pointer hover:bg-green-50 hover:border-green-200 transition text-center ${isSelected ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : ''}`;
                 card.onclick = () => selectSide(side);
-                card.innerHTML = `<span class="text-sm font-medium text-stone-700">${side}</span>`;
+                card.innerHTML = `<span class="text-sm font-medium text-stone-700 pointer-events-none">${side}</span>`;
                 sidesGrid.appendChild(card);
             });
         }
@@ -476,9 +507,11 @@
             sweetsData.forEach(sweet => {
                 const card = document.createElement('div');
                 const isSelected = weeklyPlan[currentDay].sweet === sweet;
-                card.className = `bg-white border border-stone-200 rounded-lg p-3 text-center cursor-pointer hover:bg-pink-50 hover:border-pink-200 transition ${isSelected ? 'border-pink-500 bg-pink-50 ring-1 ring-pink-500' : ''}`;
+                card.draggable = true;
+                card.ondragstart = (event) => drag(event, 'sweet', sweet);
+                card.className = `draggable-source bg-white border border-stone-200 rounded-lg p-3 text-center cursor-pointer hover:bg-pink-50 hover:border-pink-200 transition ${isSelected ? 'border-pink-500 bg-pink-50 ring-1 ring-pink-500' : ''}`;
                 card.onclick = () => selectSweet(sweet);
-                card.innerHTML = `<span class="text-sm font-medium text-stone-700">${sweet}</span>`;
+                card.innerHTML = `<span class="text-sm font-medium text-stone-700 pointer-events-none">${sweet}</span>`;
                 sweetsGrid.appendChild(card);
             });
         }
@@ -580,7 +613,6 @@
             window.print();
         }
 
-        // --- GEMINI & SETTINGS ---
         function openSettings() { settingsModal.classList.remove('hidden'); }
         function closeSettings() { settingsModal.classList.add('hidden'); }
         function saveSettings() {
@@ -633,7 +665,6 @@
                 return; 
             }
 
-            // Using Side Slot as loading indicator
             const originalContent = sideSlot.innerHTML;
             sideSlot.innerHTML = `<div class="flex flex-col items-center"><div class="text-2xl mb-2 sparkle-spin">✨</div><p class="text-xs text-stone-500">Thinking...</p></div>`;
 
@@ -667,7 +698,6 @@
         function closeModal() { modal.classList.add('hidden'); }
         modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-        // --- CHARTS ---
         function initCharts() {
             const ctxEnergy = document.getElementById('energyChart').getContext('2d');
             new Chart(ctxEnergy, { type: 'doughnut', data: { labels: ['Low', 'Med', 'Slow', 'Pizza'], datasets: [{ data: [2, 4, 4, 1], backgroundColor: ['#4ade80', '#fbbf24', '#fb923c', '#f87171'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
