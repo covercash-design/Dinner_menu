@@ -1,4 +1,4 @@
-// --- STATE ---
+// --- STATE ---_
 let currentDay = 'Mon';
 let weeklyPlan = {
     'Mon': { main: null, side: null, sweet: null },
