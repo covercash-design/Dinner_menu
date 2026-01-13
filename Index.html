@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Dinner Menu | Weekly Planner</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fdfbf7; color: #333; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .custom-scroll::-webkit-scrollbar { width: 8px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        .selected-card { border: 2px solid #ea580c; background-color: #fff7ed; transform: scale(1.02); transition: all 0.2s ease-in-out; }
+        .draggable-source { cursor: grab; }
+        .draggable-source:active { cursor: grabbing; }
+        .drag-over { background-color: #f0fdf4 !important; border-color: #22c55e !important; border-style: solid !important; transform: scale(1.02); }
+        .sparkle-spin { animation: spin 2s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #print-view { display: none; }
+        @media print {
+            body > *:not(#print-view):not(#recipe-modal) { display: none !important; }
+            body { background: white !important; }
+            body:has(#recipe-modal:not(.hidden)) #recipe-modal { display: block !important; position: static !important; width: 100% !important; height: auto !important; }
+            body:has(#recipe-modal:not(.hidden)) #recipe-modal button { display: none !important; }
+            body:has(#recipe-modal:not(.hidden)) #modal-content { overflow: visible !important; }
+            body:not(:has(#recipe-modal:not(.hidden))) #print-view { display: block !important; position: absolute; top: 0; left: 0; width: 100%; padding: 2rem; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-stone-200 sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-orange-100 p-2 rounded-lg text-2xl">📖</div>
+                <div>
+                    <h1 class="text-xl font-bold text-stone-800">The Dinner Menu</h1>
+                    <p class="text-xs text-stone-500">Interactive Meal Planner</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="text-stone-500 hover:text-stone-800 px-3 py-2 rounded-lg transition border border-stone-200 hover:bg-stone-50 text-sm font-medium shadow-sm flex items-center gap-2" title="Print Weekly Plan">
+                    <span>🖨️</span> <span class="hidden sm:inline">Print Week</span>
+                </button>
+                <button onclick="openSettings()" class="text-stone-500 hover:text-stone-800 px-3 py-2 rounded-lg transition border border-stone-200 hover:bg-stone-50 text-sm font-medium shadow-sm flex items-center gap-2" title="API Settings">
+                    <span>⚙️</span>
+                </button>
+                <button onclick="resetDay()" class="text-stone-500 hover:text-stone-800 px-3 py-2 rounded-lg transition border border-stone-200 hover:bg-stone-50 text-sm font-medium shadow-sm flex items-center gap-1" title="Clear Current Day">
+                    <span>🗑️</span>
+                </button>
+                <button onclick="randomizeMeal()" class="bg-stone-800 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg ml-2">
+                    <span>🎲</span> Spin
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6 flex-grow space-y-8">
+        <section class="max-w-4xl mx-auto text-center">
+            <p class="text-stone-600">Welcome to your <strong>Weekly Planner</strong>. Select a Day, then <strong>drag & drop</strong> items from below.</p>
+        </section>
+
+        <!-- Day Tabs -->
+        <section class="max-w-4xl mx-auto">
+            <div class="flex justify-center gap-2 bg-white p-2 rounded-xl shadow-sm border border-stone-200 overflow-x-auto">
+                <button onclick="selectDay('Mon')" id="day-Mon" class="day-tab flex-1 px-6 py-3 rounded-lg font-bold text-sm transition-all bg-stone-800 text-white shadow-md">Mon</button>
+                <button onclick="selectDay('Tue')" id="day-Tue" class="day-tab flex-1 px-6 py-3 rounded-lg font-bold text-sm text-stone-500 hover:bg-stone-100 transition-all">Tue</button>
+                <button onclick="selectDay('Wed')" id="day-Wed" class="day-tab flex-1 px-6 py-3 rounded-lg font-bold text-sm text-stone-500 hover:bg-stone-100 transition-all">Wed</button>
+                <button onclick="selectDay('Thu')" id="day-Thu" class="day-tab flex-1 px-6 py-3 rounded-lg font-bold text-sm text-stone-500 hover:bg-stone-100 transition-all">Thu</button>
+                <button onclick="selectDay('Fri')" id="day-Fri" class="day-tab flex-1 px-6 py-3 rounded-lg font-bold text-sm text-stone-500 hover:bg-stone-100 transition-all">Fri</button>
+            </div>
+        </section>
+
+        <!-- Plate Builder -->
+        <section class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden relative">
+            <div class="bg-stone-50 px-6 py-3 border-b border-stone-200 flex justify-between items-center">
+                <h2 class="font-bold text-stone-700">🍽️ <span id="current-day-label">Monday</span>'s Dinner</h2>
+                <span class="text-xs text-stone-400">Drag items here or ask AI</span>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+                <div id="main-slot" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="drop(event, 'main')" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group"></div>
+                <div id="side-slot" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="drop(event, 'side')" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative"></div>
+                <div id="sweet-slot" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="drop(event, 'sweet')" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative"></div>
+            </div>
+            <div id="meal-summary" class="bg-orange-50 px-6 py-3 text-orange-800 text-sm font-medium flex justify-between hidden">
+                <span id="total-time-display">Total Est. Time: --</span>
+                <span id="energy-display">Energy Required: --</span>
+            </div>
+        </section>
+
+        <!-- Menu Browser -->
+        <section class="bg-white rounded-2xl shadow-sm border border-stone-200 min-h-[600px] flex flex-col">
+            <div class="flex flex-wrap border-b border-stone-200">
+                <button onclick="switchTab('mains')" id="tab-mains" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors active-tab">🍗 Mains</button>
+                <button onclick="switchTab('sides')" id="tab-sides" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">🥗 Sides</button>
+                <button onclick="switchTab('sweets')" id="tab-sweets" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">🍪 Sweets</button>
+                <button onclick="switchTab('ideas')" id="tab-ideas" class="px-6 py-4 font-medium text-stone-600 hover:bg-stone-50 border-b-2 border-transparent transition-colors">💡 Ideas</button>
+                <button onclick="switchTab('emergency')" id="tab-emergency" class="px-6 py-4 font-medium text-red-600 hover:bg-red-50 border-b-2 border-transparent transition-colors">🧊 Emergency</button>
+            </div>
+            <div class="p-6 flex-grow bg-stone-50/50">
+                <div id="content-mains" class="tab-content block">
+                    <div class="flex flex-wrap gap-3 mb-6">
+                        <span class="text-sm font-medium text-stone-500 self-center mr-2">Filter:</span>
+                        <button onclick="filterMains('all')" class="filter-btn bg-stone-800 text-white px-3 py-1 rounded-full text-xs transition">All</button>
+                        <button onclick="filterMains('Low')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-green-50 px-3 py-1 rounded-full text-xs transition">⚡️ Low</button>
+                        <button onclick="filterMains('Med')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-yellow-50 px-3 py-1 rounded-full text-xs transition">⚖️ Med</button>
+                        <button onclick="filterMains('Slow')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-orange-50 px-3 py-1 rounded-full text-xs transition">🛋️ Slow</button>
+                        <button onclick="filterMains('Pizza')" class="filter-btn bg-white text-stone-600 border border-stone-200 hover:bg-red-50 px-3 py-1 rounded-full text-xs transition">🍕 Pizza</button>
+                    </div>
+                    <div id="mains-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+                <div id="content-sides" class="tab-content hidden"><div id="sides-grid" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div></div>
+                <div id="content-sweets" class="tab-content hidden"><div id="sweets-grid" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div></div>
+                <div id="content-ideas" class="tab-content hidden"><div id="ideas-list" class="space-y-3"></div></div>
+                <div id="content-emergency" class="tab-content hidden"><div id="emergency-list" class="max-w-md mx-auto space-y-4"></div></div>
+            </div>
+        </section>
+
+        <!-- Analytics -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-60 hover:opacity-100 transition-opacity">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h3 class="font-bold text-stone-700 mb-4 text-center">Master Menu Balance</h3>
+                <div class="chart-container"><canvas id="energyChart"></canvas></div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h3 class="font-bold text-stone-700 mb-4 text-center">Cook Times</h3>
+                <div class="chart-container"><canvas id="timeChart"></canvas></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <div id="recipe-modal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
+            <div class="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50 rounded-t-2xl">
+                <h3 id="modal-title" class="text-xl font-bold text-stone-800">Recipe</h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.print()" class="text-stone-500 hover:text-stone-800 px-3 py-1 rounded border border-stone-200 text-sm flex items-center gap-1 hover:bg-stone-50"><span>🖨️</span> Print</button>
+                    <button onclick="closeModal()" class="text-stone-400 hover:text-stone-600 text-2xl ml-2">&times;</button>
+                </div>
+            </div>
+            <div id="modal-content" class="p-8 overflow-y-auto custom-scroll prose prose-stone max-w-none"></div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
+            <h3 class="text-xl font-bold text-stone-800 mb-4">⚙️ App Settings</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-stone-700 mb-1">Google Gemini API Key</label>
+                <input type="password" id="api-key-input" placeholder="Paste your AIza... key here" class="w-full p-2 border border-stone-300 rounded-lg text-sm">
+                <p class="text-xs text-stone-400 mt-1">Stored securely in your browser's local storage.</p>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeSettings()" class="px-4 py-2 text-stone-500 hover:text-stone-700">Cancel</button>
+                <button onclick="saveSettings()" class="bg-stone-800 text-white px-4 py-2 rounded-lg hover:bg-stone-700">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print View -->
+    <div id="print-view" class="bg-white">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-stone-800">Weekly Dinner Plan</h1>
+            <p class="text-stone-500">Cook Twice, Eat All Week</p>
+        </div>
+        <div class="grid gap-4" id="print-grid"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="recipes.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
