@@ -47,6 +47,46 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* PRINT STYLES - Hides App, Shows Recipe Only */
+        @media print {
+            body > *:not(#recipe-modal) {
+                display: none !important;
+            }
+            body { background: white !important; }
+            #recipe-modal { 
+                display: block !important; 
+                position: static !important;
+                background: white !important;
+                width: 100% !important;
+                height: auto !important;
+                inset: 0 !important;
+                padding: 0 !important;
+                z-index: 9999 !important;
+            }
+            #recipe-modal > div {
+                box-shadow: none !important;
+                border: none !important;
+                max-width: none !important;
+                max-height: none !important;
+                width: 100% !important;
+                border-radius: 0 !important;
+            }
+            #modal-content {
+                overflow: visible !important;
+                max-height: none !important;
+                padding: 0 !important;
+            }
+            /* Hide Buttons in Print Mode */
+            #recipe-modal button, .print-hide {
+                display: none !important;
+            }
+            #modal-title {
+                font-size: 24pt !important;
+                margin-bottom: 20px !important;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -62,8 +102,12 @@
                 </div>
             </div>
             <div class="flex gap-2">
-                <button onclick="openSettings()" class="text-stone-400 hover:text-stone-600 px-3 py-2 rounded-lg transition" title="API Settings">
-                    ⚙️
+                <!-- UPDATED: Labeled Settings Button -->
+                <button onclick="openSettings()" class="text-stone-500 hover:text-stone-800 px-3 py-2 rounded-lg transition border border-stone-200 hover:bg-stone-50 text-sm font-medium shadow-sm flex items-center gap-2" title="API Settings">
+                    <span>⚙️</span> <span class="hidden sm:inline">Settings</span>
+                </button>
+                <button onclick="resetPlanner()" class="text-stone-500 hover:text-stone-800 px-3 py-2 rounded-lg transition border border-stone-200 hover:bg-stone-50 text-sm font-medium shadow-sm flex items-center gap-1" title="Clear Selections">
+                    <span>🔄</span> Reset
                 </button>
                 <button onclick="randomizeMeal()" class="bg-stone-800 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg">
                     <span>🎲</span> Spin
@@ -86,7 +130,6 @@
                 <h2 class="font-bold text-stone-700">🍽️ Tonight's Selection</h2>
                 <span class="text-xs text-stone-400">Powered by Gemini AI (or Google Search)</span>
             </div>
-            <!-- Updated Grid to 3 Columns for Sweets -->
             <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
                 <!-- Main Slot -->
                 <div id="main-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group">
@@ -168,7 +211,13 @@
         <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
             <div class="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50 rounded-t-2xl">
                 <h3 id="modal-title" class="text-xl font-bold text-stone-800">Recipe</h3>
-                <button onclick="closeModal()" class="text-stone-400 hover:text-stone-600 text-2xl">&times;</button>
+                <div class="flex items-center gap-2">
+                    <!-- UPDATED: Print Button -->
+                    <button onclick="printRecipe()" class="text-stone-500 hover:text-stone-800 px-3 py-1 rounded border border-stone-200 text-sm flex items-center gap-1 hover:bg-stone-50">
+                        <span>🖨️</span> Print
+                    </button>
+                    <button onclick="closeModal()" class="text-stone-400 hover:text-stone-600 text-2xl ml-2">&times;</button>
+                </div>
             </div>
             <div id="modal-content" class="p-8 overflow-y-auto custom-scroll prose prose-stone max-w-none"></div>
         </div>
@@ -207,8 +256,7 @@
         ];
 
         const sidesData = ["Steamed Broccoli", "Mashed Sweet Potatoes", "Roasted Carrots (425°F)", "Roasted Green Beans", "Buttery Couscous", "Jasmine Rice"];
-        
-        const sweetsData = ["Dark Chocolate", "Berries & Cream", "Frozen Yoghurt", "Fruit Salad"];
+        const sweetsData = ["Whipped Shortbread", "Dark Chocolate", "Berries & Cream", "Frozen Yoghurt", "Fruit Salad"];
 
         const newIdeasData = [
             { name: "Vegan Taco Soup", meta: "30 min, Quinoa & Black Beans" },
@@ -348,6 +396,39 @@
             sweetSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🍪</span><h3 class="text-lg font-medium text-stone-400">Something Sweet</h3><p class="text-xs text-stone-400">From "Sweets" tab</p>`;
         }
 
+        function resetPlanner() {
+            state.selectedMain = null;
+            state.selectedSide = null;
+            state.selectedSweet = null;
+            state.filter = 'all';
+
+            renderMains();
+            renderSides();
+            renderSweets();
+            
+            // Reset Filter UI
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                 if (btn.textContent === 'All') {
+                    btn.classList.add('bg-stone-800', 'text-white'); btn.classList.remove('bg-white', 'text-stone-600');
+                } else {
+                    btn.classList.remove('bg-stone-800', 'text-white'); btn.classList.add('bg-white', 'text-stone-600');
+                }
+            });
+
+            // Reset Slots
+            mainSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group";
+            mainSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🍗</span><h3 class="text-lg font-medium text-stone-400">Select Main</h3><p class="text-xs text-stone-400">From "Mains" tab</p>`;
+            
+            sideSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative";
+            sideSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🥗</span><h3 class="text-lg font-medium text-stone-400">Select Side</h3><p class="text-xs text-stone-400">From "Sides" tab</p>`;
+            
+            sweetSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative";
+            sweetSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🍪</span><h3 class="text-lg font-medium text-stone-400">Something Sweet</h3><p class="text-xs text-stone-400">From "Sweets" tab</p>`;
+
+            mealSummary.classList.add('hidden');
+            switchTab('mains');
+        }
+
         function updateSummary() {
             if (state.selectedMain) {
                 mealSummary.classList.remove('hidden');
@@ -381,6 +462,10 @@
             const randomSide = sidesData[Math.floor(Math.random() * sidesData.length)];
             const randomSweet = sweetsData[Math.floor(Math.random() * sweetsData.length)];
             selectMain(randomMain); selectSide(randomSide); selectSweet(randomSweet); switchTab('mains');
+        }
+
+        function printRecipe() {
+            window.print();
         }
 
         // --- GEMINI & SETTINGS ---
