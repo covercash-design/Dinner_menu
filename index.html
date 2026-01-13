@@ -48,43 +48,31 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* PRINT STYLES - Hides App, Shows Recipe Only */
+        /* WEEKLY PRINT STYLES */
+        #print-view { display: none; }
+        
         @media print {
-            body > *:not(#recipe-modal) {
-                display: none !important;
-            }
+            body > * { display: none !important; }
             body { background: white !important; }
-            #recipe-modal { 
-                display: block !important; 
+            
+            /* If Recipe Modal is open, print that */
+            body:has(#recipe-modal:not(.hidden)) #recipe-modal {
+                display: block !important;
                 position: static !important;
-                background: white !important;
                 width: 100% !important;
                 height: auto !important;
-                inset: 0 !important;
-                padding: 0 !important;
-                z-index: 9999 !important;
             }
-            #recipe-modal > div {
-                box-shadow: none !important;
-                border: none !important;
-                max-width: none !important;
-                max-height: none !important;
-                width: 100% !important;
-                border-radius: 0 !important;
-            }
-            #modal-content {
-                overflow: visible !important;
-                max-height: none !important;
-                padding: 0 !important;
-            }
-            /* Hide Buttons in Print Mode */
-            #recipe-modal button, .print-hide {
-                display: none !important;
-            }
-            #modal-title {
-                font-size: 24pt !important;
-                margin-bottom: 20px !important;
-                text-align: center;
+            body:has(#recipe-modal:not(.hidden)) #recipe-modal button { display: none !important; }
+            body:has(#recipe-modal:not(.hidden)) #modal-content { overflow: visible !important; }
+
+            /* If Recipe Modal is CLOSED, print the Weekly Menu */
+            body:not(:has(#recipe-modal:not(.hidden))) #print-view {
+                display: block !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                padding: 2rem;
             }
         }
     </style>
@@ -102,15 +90,15 @@
                 </div>
             </div>
             <div class="flex gap-2">
-                <!-- UPDATED: Labeled Settings Button -->
+                <button onclick="window.print()" class="text-stone-500 hover:text-stone-800 px-3 py-2 rounded-lg transition border border-stone-200 hover:bg-stone-50 text-sm font-medium shadow-sm flex items-center gap-2" title="Print Weekly Plan">
+                    <span>🖨️</span> <span class="hidden sm:inline">Print Week</span>
+                </button>
                 <button onclick="openSettings()" class="text-stone-500 hover:text-stone-800 px-3 py-2 rounded-lg transition border border-stone-200 hover:bg-stone-50 text-sm font-medium shadow-sm flex items-center gap-2" title="API Settings">
                     <span>⚙️</span> <span class="hidden sm:inline">Settings</span>
                 </button>
-                <button onclick="resetPlanner()" class="text-stone-500 hover:text-stone-800 px-3 py-2 rounded-lg transition border border-stone-200 hover:bg-stone-50 text-sm font-medium shadow-sm flex items-center gap-1" title="Clear Selections">
-                    <span>🔄</span> Reset
-                </button>
-                <button onclick="randomizeMeal()" class="bg-stone-800 hover:bg-stone-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg">
-                    <span>🎲</span> Spin
+                <!-- Reset button now clears current day only, maybe add full reset logic later -->
+                <button onclick="resetDay()" class="text-stone-500 hover:text-stone-800 px-3 py-2 rounded-lg transition border border-stone-200 hover:bg-stone-50 text-sm font-medium shadow-sm flex items-center gap-1" title="Clear Current Day">
+                    <span>🗑️</span> Clear Day
                 </button>
             </div>
         </div>
@@ -120,16 +108,28 @@
         <!-- Intro -->
         <section class="max-w-4xl mx-auto text-center">
             <p class="text-stone-600">
-                Welcome to your interactive <strong>Master Menu Bank</strong>. Select a <strong>Main</strong>, <strong>Side</strong>, and <strong>Sweet</strong> below, or use the <span class="text-purple-600 font-bold">✨ Smart Chef</span> features.
+                Welcome to your <strong>Weekly Planner</strong>. Select a Day below, then fill your plate.
             </p>
         </section>
 
-        <!-- Plate Builder -->
-        <section class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+        <!-- DAY SELECTOR TABS -->
+        <section class="max-w-4xl mx-auto">
+            <div class="flex justify-center gap-2 bg-white p-2 rounded-xl shadow-sm border border-stone-200 overflow-x-auto">
+                <button onclick="selectDay('Mon')" id="day-Mon" class="day-tab flex-1 px-6 py-3 rounded-lg font-bold text-sm transition-all bg-stone-800 text-white shadow-md">Mon</button>
+                <button onclick="selectDay('Tue')" id="day-Tue" class="day-tab flex-1 px-6 py-3 rounded-lg font-bold text-sm text-stone-500 hover:bg-stone-100 transition-all">Tue</button>
+                <button onclick="selectDay('Wed')" id="day-Wed" class="day-tab flex-1 px-6 py-3 rounded-lg font-bold text-sm text-stone-500 hover:bg-stone-100 transition-all">Wed</button>
+                <button onclick="selectDay('Thu')" id="day-Thu" class="day-tab flex-1 px-6 py-3 rounded-lg font-bold text-sm text-stone-500 hover:bg-stone-100 transition-all">Thu</button>
+                <button onclick="selectDay('Fri')" id="day-Fri" class="day-tab flex-1 px-6 py-3 rounded-lg font-bold text-sm text-stone-500 hover:bg-stone-100 transition-all">Fri</button>
+            </div>
+        </section>
+
+        <!-- Plate Builder (Context Aware) -->
+        <section class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden relative">
             <div class="bg-stone-50 px-6 py-3 border-b border-stone-200 flex justify-between items-center">
-                <h2 class="font-bold text-stone-700">🍽️ Tonight's Selection</h2>
+                <h2 class="font-bold text-stone-700">🍽️ <span id="current-day-label">Monday</span>'s Dinner</h2>
                 <span class="text-xs text-stone-400">Powered by Gemini AI (or Google Search)</span>
             </div>
+            
             <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
                 <!-- Main Slot -->
                 <div id="main-slot" class="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group">
@@ -154,18 +154,6 @@
             <div id="meal-summary" class="bg-orange-50 px-6 py-3 text-orange-800 text-sm font-medium flex justify-between hidden">
                 <span id="total-time-display">Total Est. Time: --</span>
                 <span id="energy-display">Energy Required: --</span>
-            </div>
-        </section>
-
-        <!-- Analytics -->
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
-                <h3 class="font-bold text-stone-700 mb-4 text-center">Menu Energy Levels</h3>
-                <div class="chart-container"><canvas id="energyChart"></canvas></div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
-                <h3 class="font-bold text-stone-700 mb-4 text-center">Cook Time Estimates</h3>
-                <div class="chart-container"><canvas id="timeChart"></canvas></div>
             </div>
         </section>
 
@@ -204,15 +192,26 @@
                 </div>
             </div>
         </section>
+        
+        <!-- Analytics (Kept at bottom for weekly overview later) -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-60 hover:opacity-100 transition-opacity">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h3 class="font-bold text-stone-700 mb-4 text-center">Master Menu Balance</h3>
+                <div class="chart-container"><canvas id="energyChart"></canvas></div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h3 class="font-bold text-stone-700 mb-4 text-center">Cook Times</h3>
+                <div class="chart-container"><canvas id="timeChart"></canvas></div>
+            </div>
+        </section>
     </main>
 
     <!-- RECIPE MODAL -->
-    <div id="recipe-modal" class="fixed inset-0 bg-black/50 hidden z-[60] flex items-center justify-center p-4">
+    <div id="recipe-modal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
             <div class="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50 rounded-t-2xl">
                 <h3 id="modal-title" class="text-xl font-bold text-stone-800">Recipe</h3>
                 <div class="flex items-center gap-2">
-                    <!-- UPDATED: Print Button -->
                     <button onclick="printRecipe()" class="text-stone-500 hover:text-stone-800 px-3 py-1 rounded border border-stone-200 text-sm flex items-center gap-1 hover:bg-stone-50">
                         <span>🖨️</span> Print
                     </button>
@@ -224,7 +223,7 @@
     </div>
 
     <!-- SETTINGS MODAL -->
-    <div id="settings-modal" class="fixed inset-0 bg-black/50 hidden z-[70] flex items-center justify-center p-4">
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
             <h3 class="text-xl font-bold text-stone-800 mb-4">⚙️ App Settings</h3>
             <div class="mb-4">
@@ -236,6 +235,17 @@
                 <button onclick="closeSettings()" class="px-4 py-2 text-stone-500 hover:text-stone-700">Cancel</button>
                 <button onclick="saveSettings()" class="bg-stone-800 text-white px-4 py-2 rounded-lg hover:bg-stone-700">Save</button>
             </div>
+        </div>
+    </div>
+
+    <!-- PRINT VIEW CONTAINER (Hidden normally, visible on Print) -->
+    <div id="print-view" class="bg-white">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-stone-800">Weekly Dinner Plan</h1>
+            <p class="text-stone-500">Cook Twice, Eat All Week</p>
+        </div>
+        <div class="grid gap-4" id="print-grid">
+            <!-- Populated by JS -->
         </div>
     </div>
 
@@ -267,7 +277,17 @@
         ];
         const emergencyData = ["Morning Star Chicken Patties"];
 
-        let state = { selectedMain: null, selectedSide: null, selectedSweet: null, filter: 'all' };
+        // --- STATE ---
+        let currentDay = 'Mon';
+        // Initialize 5-day plan
+        let weeklyPlan = {
+            'Mon': { main: null, side: null, sweet: null },
+            'Tue': { main: null, side: null, sweet: null },
+            'Wed': { main: null, side: null, sweet: null },
+            'Thu': { main: null, side: null, sweet: null },
+            'Fri': { main: null, side: null, sweet: null }
+        };
+        let filter = 'all';
 
         // --- DOM ---
         const mainsGrid = document.getElementById('mains-grid');
@@ -286,23 +306,148 @@
         const modalTitle = document.getElementById('modal-title');
         const settingsModal = document.getElementById('settings-modal');
         const apiKeyInput = document.getElementById('api-key-input');
+        const currentDayLabel = document.getElementById('current-day-label');
+        const printGrid = document.getElementById('print-grid');
 
         // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
-            renderMains(); renderSides(); renderSweets(); renderIdeas(); renderEmergency(); initCharts(); switchTab('mains');
+            loadPlanFromStorage();
+            renderAllTabs();
+            selectDay('Mon');
+            initCharts();
             
             // Check for saved key
             const savedKey = localStorage.getItem('dinner_menu_gemini_key');
             if(savedKey) apiKeyInput.value = savedKey;
         });
 
-        // --- CORE LOGIC ---
+        function loadPlanFromStorage() {
+            const saved = localStorage.getItem('weekly_dinner_plan');
+            if(saved) weeklyPlan = JSON.parse(saved);
+        }
+
+        function savePlanToStorage() {
+            localStorage.setItem('weekly_dinner_plan', JSON.stringify(weeklyPlan));
+            updatePrintView();
+        }
+
+        // --- DAY SELECTION LOGIC ---
+        function selectDay(day) {
+            currentDay = day;
+            
+            // Update Day Tabs UI
+            document.querySelectorAll('.day-tab').forEach(btn => {
+                if(btn.id === `day-${day}`) {
+                    btn.classList.add('bg-stone-800', 'text-white', 'shadow-md');
+                    btn.classList.remove('text-stone-500', 'hover:bg-stone-100');
+                } else {
+                    btn.classList.remove('bg-stone-800', 'text-white', 'shadow-md');
+                    btn.classList.add('text-stone-500', 'hover:bg-stone-100');
+                }
+            });
+
+            // Update Labels
+            const fullDays = {'Mon':'Monday', 'Tue':'Tuesday', 'Wed':'Wednesday', 'Thu':'Thursday', 'Fri':'Friday'};
+            currentDayLabel.textContent = fullDays[day];
+
+            // Render existing selection for this day
+            renderPlateBuilder();
+            // Re-render grids to highlight current selection
+            renderAllTabs();
+        }
+
+        function renderPlateBuilder() {
+            const plan = weeklyPlan[currentDay];
+            
+            // Main
+            if(plan.main) {
+                mainSlot.className = "bg-white border-2 border-orange-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
+                mainSlot.innerHTML = `
+                    <span class="text-4xl mb-2">${plan.main.icon}</span>
+                    <h3 class="text-xl font-bold text-stone-800 leading-tight mb-2">${plan.main.name}</h3>
+                    <p class="text-sm text-stone-500 mb-4">Est: ${plan.main.timeDisplay}</p>
+                    <button onclick="generateRecipe()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:shadow-lg transition flex items-center gap-2 transform hover:scale-105">✨ Recipe</button>
+                `;
+            } else {
+                mainSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group";
+                mainSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🍗</span><h3 class="text-lg font-medium text-stone-400">Select Main</h3><p class="text-xs text-stone-400">From "Mains" tab</p>`;
+            }
+
+            // Side
+            if(plan.side) {
+                sideSlot.className = "bg-white border-2 border-green-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
+                sideSlot.innerHTML = `
+                    <span class="text-4xl mb-2">🥗</span>
+                    <h3 class="text-xl font-bold text-stone-800 leading-tight mb-4">${plan.side}</h3>
+                    <button onclick="suggestSide()" class="text-xs text-purple-600 font-medium hover:underline flex items-center gap-1">✨ Ask AI</button>
+                `;
+            } else {
+                sideSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative";
+                sideSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🥗</span><h3 class="text-lg font-medium text-stone-400">Select Side</h3><p class="text-xs text-stone-400">From "Sides" tab</p>`;
+            }
+
+            // Sweet
+            if(plan.sweet) {
+                sweetSlot.className = "bg-white border-2 border-pink-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
+                sweetSlot.innerHTML = `<span class="text-4xl mb-2">🍪</span><h3 class="text-xl font-bold text-pink-700 leading-tight mb-2">${plan.sweet}</h3><button onclick="selectSweet(null)" class="text-xs text-stone-400 underline">Remove</button>`;
+            } else {
+                sweetSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative";
+                sweetSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🍪</span><h3 class="text-lg font-medium text-stone-400">Something Sweet</h3><p class="text-xs text-stone-400">From "Sweets" tab</p>`;
+            }
+
+            updateSummary();
+        }
+
+        // --- SELECTION LOGIC ---
+        function selectMain(dish) {
+            weeklyPlan[currentDay].main = dish;
+            savePlanToStorage();
+            renderPlateBuilder();
+            renderMains(); // Update grid highlight
+        }
+
+        function selectSide(side) {
+            weeklyPlan[currentDay].side = side;
+            savePlanToStorage();
+            renderPlateBuilder();
+            renderSides();
+        }
+
+        function selectSweet(sweet) {
+            weeklyPlan[currentDay].sweet = sweet;
+            savePlanToStorage();
+            renderPlateBuilder();
+            renderSweets();
+        }
+
+        function resetDay() {
+            weeklyPlan[currentDay] = { main: null, side: null, sweet: null };
+            savePlanToStorage();
+            renderPlateBuilder();
+            renderAllTabs();
+        }
+
+        function resetPlanner() {
+            // Full Reset (Optional usage)
+            if(confirm("Clear the entire week?")) {
+                Object.keys(weeklyPlan).forEach(day => weeklyPlan[day] = { main: null, side: null, sweet: null });
+                savePlanToStorage();
+                resetDay(); // re-renders current
+            }
+        }
+
+        // --- RENDERING TABS ---
+        function renderAllTabs() {
+            renderMains(); renderSides(); renderSweets(); renderIdeas(); renderEmergency();
+        }
+
         function renderMains() {
             mainsGrid.innerHTML = '';
-            const filtered = state.filter === 'all' ? mainsData : mainsData.filter(m => m.category === state.filter);
+            const filtered = filter === 'all' ? mainsData : mainsData.filter(m => m.category === filter);
             filtered.forEach(dish => {
                 const card = document.createElement('div');
-                card.className = `bg-white border border-stone-200 rounded-xl p-4 cursor-pointer hover:shadow-md transition group ${state.selectedMain?.id === dish.id ? 'selected-card' : ''}`;
+                const isSelected = weeklyPlan[currentDay].main?.id === dish.id;
+                card.className = `bg-white border border-stone-200 rounded-xl p-4 cursor-pointer hover:shadow-md transition group ${isSelected ? 'selected-card' : ''}`;
                 card.onclick = () => selectMain(dish);
                 let colorClass = dish.category === 'Low' ? 'bg-green-400' : dish.category === 'Med' ? 'bg-amber-400' : dish.category === 'Slow' ? 'bg-orange-400' : 'bg-red-400';
                 card.innerHTML = `
@@ -318,7 +463,8 @@
             sidesGrid.innerHTML = '';
             sidesData.forEach(side => {
                 const card = document.createElement('div');
-                card.className = `bg-white border border-stone-200 rounded-lg p-3 cursor-pointer hover:bg-green-50 hover:border-green-200 transition text-center ${state.selectedSide === side ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : ''}`;
+                const isSelected = weeklyPlan[currentDay].side === side;
+                card.className = `bg-white border border-stone-200 rounded-lg p-3 cursor-pointer hover:bg-green-50 hover:border-green-200 transition text-center ${isSelected ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : ''}`;
                 card.onclick = () => selectSide(side);
                 card.innerHTML = `<span class="text-sm font-medium text-stone-700">${side}</span>`;
                 sidesGrid.appendChild(card);
@@ -329,7 +475,7 @@
             sweetsGrid.innerHTML = '';
             sweetsData.forEach(sweet => {
                 const card = document.createElement('div');
-                const isSelected = state.selectedSweet === sweet;
+                const isSelected = weeklyPlan[currentDay].sweet === sweet;
                 card.className = `bg-white border border-stone-200 rounded-lg p-3 text-center cursor-pointer hover:bg-pink-50 hover:border-pink-200 transition ${isSelected ? 'border-pink-500 bg-pink-50 ring-1 ring-pink-500' : ''}`;
                 card.onclick = () => selectSweet(sweet);
                 card.innerHTML = `<span class="text-sm font-medium text-stone-700">${sweet}</span>`;
@@ -357,88 +503,49 @@
             });
         }
 
-        function selectMain(dish) {
-            state.selectedMain = dish;
-            renderMains();
-            mainSlot.className = "bg-white border-2 border-orange-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
-            mainSlot.innerHTML = `
-                <span class="text-4xl mb-2">${dish.icon}</span>
-                <h3 class="text-xl font-bold text-stone-800 leading-tight mb-2">${dish.name}</h3>
-                <p class="text-sm text-stone-500 mb-4">Est: ${dish.timeDisplay}</p>
-                <button onclick="generateRecipe()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:shadow-lg transition flex items-center gap-2 transform hover:scale-105">✨ Find/Generate Recipe</button>
-            `;
-            updateSummary();
-        }
-
-        function selectSide(side) {
-            state.selectedSide = side;
-            renderSides();
-            sideSlot.className = "bg-white border-2 border-green-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
-            sideSlot.innerHTML = `
-                <span class="text-4xl mb-2">🥗</span>
-                <h3 class="text-xl font-bold text-stone-800 leading-tight mb-4">${side}</h3>
-                <button onclick="suggestSide()" class="text-xs text-purple-600 font-medium hover:underline flex items-center gap-1">✨ Ask AI (or Google)</button>
-            `;
-            updateSummary();
-        }
-
-        function selectSweet(sweet) {
-            state.selectedSweet = sweet;
-            renderSweets();
-            sweetSlot.className = "bg-white border-2 border-pink-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
-            sweetSlot.innerHTML = `<span class="text-4xl mb-2">🍪</span><h3 class="text-xl font-bold text-pink-700 leading-tight mb-2">${sweet}</h3><button onclick="clearSweet()" class="text-xs text-stone-400 underline">Remove</button>`;
-        }
-        
-        function clearSweet() {
-            state.selectedSweet = null;
-            renderSweets();
-            sweetSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative";
-            sweetSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🍪</span><h3 class="text-lg font-medium text-stone-400">Something Sweet</h3><p class="text-xs text-stone-400">From "Sweets" tab</p>`;
-        }
-
-        function resetPlanner() {
-            state.selectedMain = null;
-            state.selectedSide = null;
-            state.selectedSweet = null;
-            state.filter = 'all';
-
-            renderMains();
-            renderSides();
-            renderSweets();
+        function updatePrintView() {
+            printGrid.innerHTML = '';
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            const fullDays = {'Mon':'Monday', 'Tue':'Tuesday', 'Wed':'Wednesday', 'Thu':'Thursday', 'Fri':'Friday'};
             
-            // Reset Filter UI
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                 if (btn.textContent === 'All') {
-                    btn.classList.add('bg-stone-800', 'text-white'); btn.classList.remove('bg-white', 'text-stone-600');
-                } else {
-                    btn.classList.remove('bg-stone-800', 'text-white'); btn.classList.add('bg-white', 'text-stone-600');
+            days.forEach(day => {
+                const plan = weeklyPlan[day];
+                if(plan.main || plan.side || plan.sweet) {
+                    const row = document.createElement('div');
+                    row.className = 'flex border-b border-stone-200 py-4 break-inside-avoid';
+                    row.innerHTML = `
+                        <div class="w-32 font-bold text-stone-800 text-xl">${fullDays[day]}</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-lg text-stone-900">${plan.main ? plan.main.name : '<span class="text-stone-300 italic">No Main</span>'}</div>
+                            <div class="text-stone-600">${plan.side ? '+ ' + plan.side : ''}</div>
+                            ${plan.sweet ? `<div class="text-pink-600 text-sm mt-1">🍪 ${plan.sweet}</div>` : ''}
+                        </div>
+                        <div class="w-24 text-right text-sm text-stone-500">
+                            ${plan.main ? plan.main.timeDisplay : ''}
+                        </div>
+                    `;
+                    printGrid.appendChild(row);
                 }
             });
-
-            // Reset Slots
-            mainSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative group";
-            mainSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🍗</span><h3 class="text-lg font-medium text-stone-400">Select Main</h3><p class="text-xs text-stone-400">From "Mains" tab</p>`;
             
-            sideSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative";
-            sideSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🥗</span><h3 class="text-lg font-medium text-stone-400">Select Side</h3><p class="text-xs text-stone-400">From "Sides" tab</p>`;
-            
-            sweetSlot.className = "border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] transition-all bg-stone-50 relative";
-            sweetSlot.innerHTML = `<span class="text-4xl mb-3 opacity-30">🍪</span><h3 class="text-lg font-medium text-stone-400">Something Sweet</h3><p class="text-xs text-stone-400">From "Sweets" tab</p>`;
-
-            mealSummary.classList.add('hidden');
-            switchTab('mains');
+            if(printGrid.children.length === 0) {
+                printGrid.innerHTML = '<div class="text-center text-stone-400 py-10">Plan is empty. Go select some meals!</div>';
+            }
         }
 
         function updateSummary() {
-            if (state.selectedMain) {
+            const plan = weeklyPlan[currentDay];
+            if (plan.main) {
                 mealSummary.classList.remove('hidden');
-                totalTimeDisplay.textContent = `Total Est. Time: ${state.selectedMain.timeDisplay} + Sides`;
-                energyDisplay.textContent = `Energy Required: ${state.selectedMain.energy}`;
+                totalTimeDisplay.textContent = `Total Est. Time: ${plan.main.timeDisplay} + Sides`;
+                energyDisplay.textContent = `Energy Required: ${plan.main.energy}`;
+            } else {
+                mealSummary.classList.add('hidden');
             }
         }
 
         function filterMains(category) {
-            state.filter = category;
+            filter = category;
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 if (btn.textContent.includes(category) || (category === 'all' && btn.textContent === 'All')) {
                     btn.classList.add('bg-stone-800', 'text-white'); btn.classList.remove('bg-white', 'text-stone-600');
@@ -461,7 +568,12 @@
             const randomMain = mainsData[Math.floor(Math.random() * mainsData.length)];
             const randomSide = sidesData[Math.floor(Math.random() * sidesData.length)];
             const randomSweet = sweetsData[Math.floor(Math.random() * sweetsData.length)];
-            selectMain(randomMain); selectSide(randomSide); selectSweet(randomSweet); switchTab('mains');
+            
+            weeklyPlan[currentDay] = { main: randomMain, side: randomSide, sweet: randomSweet };
+            savePlanToStorage();
+            renderPlateBuilder();
+            renderAllTabs();
+            switchTab('mains');
         }
 
         function printRecipe() {
@@ -485,12 +597,12 @@
         }
 
         async function generateRecipe() {
-            if (!state.selectedMain) return;
+            const plan = weeklyPlan[currentDay];
+            if (!plan.main) return;
             const key = localStorage.getItem('dinner_menu_gemini_key');
             
-            // GOOGLE SEARCH FALLBACK
             if (!key) { 
-                const query = encodeURIComponent(`recipe for ${state.selectedMain.name} ${state.selectedMain.notes || ''}`);
+                const query = encodeURIComponent(`recipe for ${plan.main.name} ${plan.main.notes || ''}`);
                 window.open(`https://www.google.com/search?q=${query}`, '_blank');
                 return; 
             }
@@ -499,11 +611,11 @@
             modalContent.innerHTML = `<div class="flex flex-col items-center justify-center py-12"><div class="text-4xl mb-4 sparkle-spin">✨</div><p class="text-stone-500 animate-pulse">Consulting the digital chef...</p></div>`;
             modalTitle.textContent = "Generating...";
 
-            const prompt = `Generate a concise recipe card for "${state.selectedMain.name}". Notes: "${state.selectedMain.notes}". Energy Level: ${state.selectedMain.energy}. Format as Markdown.`;
+            const prompt = `Generate a concise recipe card for "${plan.main.name}". Notes: "${plan.main.notes}". Energy Level: ${plan.main.energy}. Format as Markdown.`;
             const result = await callGemini(prompt, key);
             
             if (result) {
-                modalTitle.textContent = `Recipe: ${state.selectedMain.name}`;
+                modalTitle.textContent = `Recipe: ${plan.main.name}`;
                 modalContent.innerHTML = marked.parse(result);
             } else {
                 modalContent.innerHTML = `<p class="text-red-500 text-center">API Error. Check your key.</p>`;
@@ -511,29 +623,32 @@
         }
 
         async function suggestSide() {
-            if (!state.selectedMain) return;
+            const plan = weeklyPlan[currentDay];
+            if (!plan.main) return;
             const key = localStorage.getItem('dinner_menu_gemini_key');
             
-            // GOOGLE SEARCH FALLBACK
             if (!key) { 
-                const query = encodeURIComponent(`best side dish pairing for ${state.selectedMain.name}`);
+                const query = encodeURIComponent(`best side dish pairing for ${plan.main.name}`);
                 window.open(`https://www.google.com/search?q=${query}`, '_blank');
                 return; 
             }
 
+            // Using Side Slot as loading indicator
             const originalContent = sideSlot.innerHTML;
             sideSlot.innerHTML = `<div class="flex flex-col items-center"><div class="text-2xl mb-2 sparkle-spin">✨</div><p class="text-xs text-stone-500">Thinking...</p></div>`;
 
-            const prompt = `Suggest ONE perfect side dish for "${state.selectedMain.name}". Return ONLY the side name on line 1 and a 1-sentence reason on line 2.`;
+            const prompt = `Suggest ONE perfect side dish for "${plan.main.name}". Return ONLY the side name on line 1 and a 1-sentence reason on line 2.`;
             const result = await callGemini(prompt, key);
 
             if (result) {
                 const lines = result.split('\n').filter(line => line.trim() !== '');
                 const sideName = lines[0] || "Garlic Bread";
                 const reason = lines[1] || "It goes well with everything.";
-                state.selectedSide = sideName;
-                sideSlot.className = "bg-white border-2 border-purple-500 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[12rem] shadow-sm transition-all";
-                sideSlot.innerHTML = `<span class="text-4xl mb-2">✨</span><h3 class="text-xl font-bold text-purple-700 leading-tight mb-2">${sideName}</h3><p class="text-xs text-stone-500 italic mb-4">"${reason}"</p><button onclick="renderSides()" class="text-xs text-stone-400 underline">Reset</button>`;
+                
+                weeklyPlan[currentDay].side = sideName;
+                savePlanToStorage();
+                renderPlateBuilder();
+                renderSides();
             } else {
                 sideSlot.innerHTML = originalContent;
                 alert("AI Error. Check your key.");
